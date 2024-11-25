@@ -9,7 +9,7 @@ git clone adımında sizden kullanıcı adınız ve şifreniz istenecektir. Doğ
 ```
 cd your_ros_ws
 cd src
-git clone https://github.com/EVAOtonom/EVA-sim-2.0.git
+git clone https://github.com/EVAOtonom/evata_sim.git
 cd ..
 colcon build
 ```
