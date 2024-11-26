@@ -1,21 +1,20 @@
+import os
 from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch.actions import ExecuteProcess
-import os
 
 def generate_launch_description():
-    # Path to the .world
-    world_file = os.path.join(
-        os.getenv('HOME'), 'ros2_ws', 'src', 'evata_sim', 'pist_world', 'pist.world'
-    )
+    # Mevcut çalışma dizinini al
+    dir_path = os.path.dirname(os.path.realpath(__file__))
 
-    # Path to the models directory
-    models_path = os.path.join(
-        os.getenv('HOME'), 'ros2_ws', 'src', 'evata_sim', 'pist_world','models'
-    )
+    # /install/evata_sim/share/evata_sim/launch kısmına kadar yolu al
+    src_dir = dir_path.split('/install')[0]  # install kısmını çıkar
 
-    # Set the GAZEBO_MODEL_PATH environment variable
-    os.environ['GAZEBO_MODEL_PATH'] = models_path
+    # pist_world klasörüne ve pist.world dosyasına giden yolu oluştur
+    world_file = os.path.join(src_dir, 'src', 'evata_sim', 'pist_world', 'pist.world')
+
+    # Models klasörüne giden yolu oluştur
+    models_path = os.path.join(src_dir, 'src', 'evata_sim', 'pist_world', 'models')
 
     # Launch Gazebo
     gazebo = ExecuteProcess(
