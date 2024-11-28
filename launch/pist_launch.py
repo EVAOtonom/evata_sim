@@ -16,13 +16,28 @@ def generate_launch_description():
     # Models klasörüne giden yolu oluştur
     models_path = os.path.join(src_dir, 'src', 'evata_sim', 'pist_world', 'models')
 
+    # Gazebo'nun environment variable'larını ayarla
+    os.environ['IGN_GAZEBO_RESOURCE_PATH'] = models_path
+
     # Launch Gazebo
     gazebo = ExecuteProcess(
         cmd=['ign', 'gazebo', world_file],
         output='screen'
     )
 
-    return LaunchDescription([
-        gazebo
-    ])
+    # Köprü oluşturacak node
+    bridge = Node(
+        package='ros_gz_bridge',
+        executable='parameter_bridge',
+        arguments=[
+            '/cmd_vel@geometry_msgs/msg/Twist@ignition.msgs.Twist',
+            '/model/Evata/pose@tf2_msgs/msg/TFMessage@ignition.msgs.Pose_V',
+            '/clock@rosgraph_msgs/msg/Clock@ignition.msgs.Clock'
+        ],
+        output='screen'
+    )
 
+    return LaunchDescription([
+        gazebo,
+        bridge
+    ])
