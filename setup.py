@@ -26,6 +26,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            "movement_test =" +package_name +".movement_test:main"
         ],
     },
 )
