@@ -64,7 +64,7 @@
 	  <pose>32.6016 43.6005 0 0 0 -1.5718</pose> <!-- x, y, z, roll, pitch, yaw -->
 	<include>
 	   <uri>
-		https://fuel.gazebosim.org/1.0/akf/models/Evata
+		model://Evata
 	   </uri>
 	</include>
 	</model>
