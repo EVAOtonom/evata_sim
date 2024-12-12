@@ -12,6 +12,7 @@ cd src
 git clone https://github.com/EVAOtonom/evata_sim.git
 cd ..
 colcon build
+sudo apt-get install ros-humble-ros-gz-bridge
 ```
 
 Simülasyon ortamınız hazır. Şimdi aşağıdaki komutlar ile simülasyonu başlatabilirsiniz.
