@@ -20,6 +20,11 @@
       filename="ignition-gazebo-contact-system"
       name="gz::sim::systems::Contact">
     </plugin>
+    <plugin
+      filename="ignition-gazebo-sensors-system"
+      name="ignition::gazebo::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
         
         <!-- Light -->
      <light type="directional" name="sun">

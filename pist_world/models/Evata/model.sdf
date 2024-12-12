@@ -1,5 +1,6 @@
 <?xml version="1.0" ?>
 <sdf version="1.6">
+
   <model name="Evata">
     <pose>0 0 0.03 0 0 0</pose>
     <link name="chassis">
@@ -588,5 +589,66 @@
           <min_acceleration>-30</min_acceleration>
           <max_acceleration>30</max_acceleration>
         </plugin>
+
+  <!-- SENSORS-->      
+  <!--ŞERİT TAKİBİ JABRA Camera-->
+        <link name="camera_link">
+        <pose>0 -2.2 0.8 0 0 -1.5708</pose> <!-- 90 derece sağa çevrilmiş pose -->
+        <inertial>
+          <mass>0.1</mass>
+          <inertia>
+            <ixx>0.0001</ixx>
+            <iyy>0.0001</iyy>
+            <izz>0.0001</izz>
+          </inertia>
+        </inertial>
+        <visual name="camera_visual">
+          <geometry>
+            <box>
+              <size>0.1 0.1 0.1</size>
+            </box>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Grey</name>
+            </script>
+          </material>
+        </visual>
+        <collision name="camera_collision">
+          <geometry>
+            <box>
+              <size>0.1 0.1 0.1</size>
+            </box>
+          </geometry>
+        </collision>
+        <sensor name="rgb_camera" type="camera">
+          <pose>0 0 0 0 0 0</pose> <!-- Kameranın pozisyonunu link merkezine göre sıfırladık -->
+          <camera>
+            <horizontal_fov>2.900</horizontal_fov>
+            <image>
+              <width>800</width>
+              <height>600</height>
+              <format>R8G8B8</format>
+            </image>
+            <clip>
+              <near>0.1</near>
+              <far>100</far>
+            </clip>
+          </camera>
+          <always_on>1</always_on>
+          <update_rate>30</update_rate>
+          <visualize>true</visualize>
+          <topic>/camera/rgb</topic>
+        </sensor>
+      </link>
+
+      <joint name="camera_joint" type="fixed">
+        <pose>0 -2.2 0.8 0 0 0</pose> <!-- Kamera bağlantı pozisyonu -->
+        <parent>chassis</parent>
+        <child>camera_link</child>
+      </joint>
+
+       
   </model>
 </sdf>
