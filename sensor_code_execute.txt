@@ -1,0 +1,10 @@
+1-Kodu yürütmek için ilk önce kodu evata_sim/evata_sim dosyasının içine atın.
+
+2-Sonrasında dosya ismi ne ise örnek jabra_test.py ise ana paket olan evata_sim içindeki setup.py içindeki entry points kısmındaki 
+
+            "movement_test =" +package_name +".movement_test:main",
+            "jabra_test=" +package_name +".jabra_test:main"
+            
+yere yukardaki gibi yerleşim yapıyoruz her satırdan sonra "," koyulması gerekiyor.
+
+3-Terminalde workspace içine girilip colcon build yapıldıktan sonra "ros2 run jabra_test" ile çalıştırılabilir.
