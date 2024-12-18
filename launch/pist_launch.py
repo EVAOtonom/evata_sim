@@ -33,7 +33,8 @@ def generate_launch_description():
             '/cmd_vel@geometry_msgs/msg/Twist@ignition.msgs.Twist',
             '/model/Evata/pose@tf2_msgs/msg/TFMessage@ignition.msgs.Pose_V',
             '/clock@rosgraph_msgs/msg/Clock@ignition.msgs.Clock',
-            '/camera/rgb@sensor_msgs/msg/Image@ignition.msgs.Image'
+            '/camera/rgb@sensor_msgs/msg/Image@ignition.msgs.Image',
+            '/lidar/scan@sensor_msgs/msg/LaserScan@ignition.msgs.LaserScan'
         ],
         output='screen'
     )
