@@ -34,7 +34,8 @@ def generate_launch_description():
             '/model/Evata/pose@tf2_msgs/msg/TFMessage@ignition.msgs.Pose_V',
             '/clock@rosgraph_msgs/msg/Clock@ignition.msgs.Clock',
             '/camera/rgb@sensor_msgs/msg/Image@ignition.msgs.Image',
-            '/lidar/scan@sensor_msgs/msg/LaserScan@ignition.msgs.LaserScan'
+            '/lidar/scan@sensor_msgs/msg/LaserScan@ignition.msgs.LaserScan',
+            '/odom@nav_msgs/msg/Odometry@ignition.msgs.Odometry'
         ],
         output='screen'
     )
