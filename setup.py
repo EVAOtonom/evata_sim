@@ -27,7 +27,8 @@ setup(
     entry_points={
         'console_scripts': [
             "movement_test =" +package_name +".movement_test:main",
-            "jabra_test=" +package_name +".jabra_test:main"
+            "jabra_test=" +package_name +".jabra_test:main",
+            "odom=" +package_name +".odom:main"
         ],
     },
 )
