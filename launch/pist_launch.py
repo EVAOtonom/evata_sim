@@ -35,7 +35,12 @@ def generate_launch_description():
             '/clock@rosgraph_msgs/msg/Clock@ignition.msgs.Clock',
             '/camera/rgb@sensor_msgs/msg/Image@ignition.msgs.Image',
             '/lidar/scan@sensor_msgs/msg/LaserScan@ignition.msgs.LaserScan',
-            '/odom@nav_msgs/msg/Odometry@ignition.msgs.Odometry'
+            '/odom@nav_msgs/msg/Odometry@ignition.msgs.Odometry',
+            '/camera/zed@sensor_msgs/msg/Image@ignition.msgs.Image',
+	    '/camera/zed/points@sensor_msgs/msg/PointCloud2@ignition.msgs.PointCloud'
+
+            
+            
         ],
         output='screen'
     )
