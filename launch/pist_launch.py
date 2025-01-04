@@ -30,14 +30,19 @@ def generate_launch_description():
         package='ros_gz_bridge',
         executable='parameter_bridge',
         arguments=[
-            '/cmd_vel@geometry_msgs/msg/Twist@ignition.msgs.Twist',
-            '/model/Evata/pose@tf2_msgs/msg/TFMessage@ignition.msgs.Pose_V',
-            '/clock@rosgraph_msgs/msg/Clock@ignition.msgs.Clock',
-            '/camera/rgb@sensor_msgs/msg/Image@ignition.msgs.Image',
-            '/lidar/scan@sensor_msgs/msg/LaserScan@ignition.msgs.LaserScan',
-            '/odom@nav_msgs/msg/Odometry@ignition.msgs.Odometry',
-            '/camera/zed@sensor_msgs/msg/Image@ignition.msgs.Image',
-	    '/camera/zed/points@sensor_msgs/msg/PointCloud2@ignition.msgs.PointCloud'
+		'/cmd_vel@geometry_msgs/msg/Twist@ignition.msgs.Twist',
+		'/model/Evata/pose@tf2_msgs/msg/TFMessage@ignition.msgs.Pose_V',
+		'/clock@rosgraph_msgs/msg/Clock@ignition.msgs.Clock',
+		'/camera/rgb@sensor_msgs/msg/Image@ignition.msgs.Image',
+		'/lidar/scan@sensor_msgs/msg/LaserScan@ignition.msgs.LaserScan',
+		'/odom@nav_msgs/msg/Odometry@ignition.msgs.Odometry',
+		'/depth_camera/zed/image@sensor_msgs/msg/Image@ignition.msgs.Image',
+		'/depth_camera/zed/points@sensor_msgs/msg/PointCloud2@ignition.msgs.PointCloud',
+		'/depth_camera/zed/camera_info@sensor_msgs/msg/CameraInfo@ignition.msgs.CameraInfo',
+		'/depth_camera/zed/depth_image@sensor_msgs/msg/Image@ignition.msgs.Image',
+		'/depth_camera/zed/image@sensor_msgs/msg/Image@ignition.msgs.Image',
+		'/depth_camera/zed/points@sensor_msgs/msg/PointCloud2@ignition.msgs.PointCloudPacked'
+
 
             
             
