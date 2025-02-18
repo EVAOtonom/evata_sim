@@ -29,7 +29,8 @@ setup(
             "movement_test =" +package_name +".movement_test:main",
             "jabra_test=" +package_name +".jabra_test:main",
             "odom=" +package_name +".odom:main",
-            "zed_test=" +package_name +".zed_test:main"
+            "zed_test=" +package_name +".zed_test:main",
+            "laneDetection=" +package_name +".laneDetection:main"
         ],
     },
 )

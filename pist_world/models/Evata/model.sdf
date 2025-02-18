@@ -594,7 +594,7 @@
     <!--ŞERİT
     TAKİBİ JABRA Camera-->
     <link name="camera_link">
-      <pose>0 -2.2 0.8 0 0 -1.5708</pose> <!-- 90 derece sağa çevrilmiş pose -->
+      <pose>0 -1.5 1.2 0 -1.0 -1.5708</pose> <!-- 90 derece sağa çevrilmiş pose -->
       <inertial>
         <mass>0.1</mass>
         <inertia>
