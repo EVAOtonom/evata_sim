@@ -59,7 +59,9 @@ class ImageSaver(Node):
             self.image_callback,
             10)
         self.bridge = CvBridge()
-        weights='/home/eva/Desktop/Sefa_deneme/yolopv2.pt'
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        src_dir = dir_path.split('/install')[0]  # install kısmını çıkar
+        weights = os.path.join(src_dir, 'src', 'evata_sim', 'evata_sim', 'utils', 'yolopv2.pt')
         device = "0"
         model = torch.jit.load(weights)
         device = select_device(device)
@@ -92,11 +94,8 @@ class ImageSaver(Node):
     #        # Call the detection function after saving the image
     #        self.detect(image_path)
 
-    def detect(self, source, weights='/home/eva/Desktop/Sefa_deneme/yolopv2.pt', 
-               save_txt=False, imgsz=640, conf_thres=0.3, iou_thres=0.45, 
-               device='0', save_conf=False, nosave=True, classes=None, 
-               agnostic_nms=False, project='runs/detect', name='exp', 
-               exist_ok=False):
+    def detect(self, source, imgsz=640, conf_thres=0.3, iou_thres=0.45, 
+               device='0', classes=None, agnostic_nms=False,):
         # setting and directories
         # save_img = not nosave and not source.endswith('.txt')  # save inference images
         # save_dir = Path(increment_path(Path(project) / name, exist_ok=exist_ok))  # increment run
