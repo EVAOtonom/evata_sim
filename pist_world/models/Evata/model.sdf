@@ -136,6 +136,13 @@
           </box>
         </geometry>
       </collision>
+      
+      <sensor name="imu_sensor" type="imu">
+        <always_on>1</always_on>
+        <update_rate>1</update_rate>
+        <visualize>true</visualize>
+        <topic>imu</topic>
+      </sensor>
     </link>
 
     <link name="steering_wheel">
@@ -792,5 +799,15 @@
       2.2 0.8 0 0 0</pose>-->
     </joint>
     
+    <plugin filename="libignition-gazebo-odometry-publisher-system.so" 
+        name="ignition::gazebo::systems::OdometryPublisher">
+  	<odom_topic>/odom</odom_topic>
+  	<tf_frame>odom</tf_frame>
+  	<child_frame>chassis</child_frame>
+  	<publish_angular_velocity>true</publish_angular_velocity>
+  	<publish_linear_velocity>true</publish_linear_velocity>
+  	<update_rate>50</update_rate>
+    </plugin>
+   
   </model>
 </sdf>

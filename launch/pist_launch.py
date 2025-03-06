@@ -36,6 +36,7 @@ def generate_launch_description():
 		'/camera/rgb@sensor_msgs/msg/Image@ignition.msgs.Image',
 		'/lidar@sensor_msgs/msg/LaserScan@ignition.msgs.LaserScan',
 		'/odom@nav_msgs/msg/Odometry@ignition.msgs.Odometry',
+		'/imu@sensor_msgs/msg/Imu@ignition.msgs.IMU',
 		'/depth_camera/zed/image@sensor_msgs/msg/Image@ignition.msgs.Image',
 		'/depth_camera/zed/points@sensor_msgs/msg/PointCloud2@ignition.msgs.PointCloud',
 		'/depth_camera/zed/camera_info@sensor_msgs/msg/CameraInfo@ignition.msgs.CameraInfo',
