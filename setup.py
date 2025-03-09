@@ -30,7 +30,8 @@ setup(
             "jabra_test=" +package_name +".jabra_test:main",
             "odom=" +package_name +".odom:main",
             "zed_test=" +package_name +".zed_test:main",
-            "laneDetection=" +package_name +".laneDetection:main"
+            "laneDetection=" +package_name +".laneDetection:main",
+            "sign_converted=" +package_name +".sign_converted:main"
         ],
     },
 )
