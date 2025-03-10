@@ -73,41 +73,5 @@
 	   </uri>
 	</include>
 	</model>
-	
-<!-- Sağa Dönüş Tabelası -->
-    <model name="saga_donus_tabelasi">
-      <static>true</static>
-	<pose>26 43 0 0 0 1.5</pose> <!-- z=1 yaptık, böylece biraz yukarı çıktı -->
-      <link name="link">
-        <visual name="visual">
-          <geometry>
-            <mesh>
-		<uri>model://saga_donus_tabelasi/meshes/saga_donus_tabelasi.dae</uri>
-              <scale>1 1 1</scale>
-            </mesh>
-          </geometry>
-        </visual>
-      </link>
-    </model>
-    
-<!-- DUR Tabelası -->
-<model name="dur_tabelasi">
-  <static>true</static>
-  <pose>15 45 0 0 0 1.5</pose> <!-- Konumu değiştirebilirsin -->
-  <link name="link">
-    <visual name="visual">
-      <geometry>
-        <mesh>
-          <uri>model://levhali_pist/meshes/dur.dae</uri>
-          <scale>1 1 1</scale>
-        </mesh>
-      </geometry>
-    </visual>
-  </link>
-</model>
-
-
-
-
     </world>
 </sdf>

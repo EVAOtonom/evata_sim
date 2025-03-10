@@ -16,7 +16,7 @@ logging.getLogger('ultralytics').setLevel(logging.ERROR)
 class SignDetector(Node):
     def __init__(self):
         super().__init__('sign_detector_node')
-        self.model = YOLO("/home/otonom/ros2_ws/src/evata_sim/evata_sim/train16best.pt")
+        self.model = YOLO("/home/ubuntu/ros2_ws/src/evata_sim/evata_sim/train16best.pt")
         self.bridge = CvBridge()
         self.fx = 277.0
         self.tracked_signs = {}
