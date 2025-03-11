@@ -100,9 +100,7 @@ def generate_launch_description():
                         output='log',
                         arguments=['0.0', '0.0', '0.0', '0.0', '0.0', '0.0', 'map', 'odom'])
     
-    sdf = os.path.join(
-        get_package_share_directory('turtlebot3'),
-        'models', 'turtlebot3', 'model.sdf')
+    sdf = os.path.join(src_dir, 'src', 'evata_sim', 'navigasyon', 'models', 'turtlebot3', 'model.sdf')
     
     doc = xacro.parse(open(sdf))
     xacro.process_doc(doc)
@@ -135,6 +133,13 @@ def generate_launch_description():
             default_value=world_name,
             description='World name'
         ),
+        Node(
+            package='robot_state_publisher',
+            executable='robot_state_publisher',
+            name='robot_state_publisher',
+            output='screen',
+            parameters=[{'use_sim_time': use_sim_time,
+                         'robot_description': doc.toxml()}]),
         
 
 
