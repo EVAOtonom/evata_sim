@@ -2,8 +2,11 @@
 <sdf version="1.6">
 
   <model name="Evata">
-    <pose>0 0 0.03 0 0 0</pose>
-    <link name="chassis">
+    <pose>0 0 0 0 0 0</pose>
+
+    
+
+    <link name="base_link">
       <inertial>
         <mass>1326.0</mass>
         <pose>0 -0.266 0.48 0 0 0</pose>
@@ -17,7 +20,7 @@
         </inertia>
       </inertial>
 
-      <visual name="chassis_visual">
+      <visual name="base_link_visual">
         <geometry>
           <mesh>
             <uri>meshes/Hybrid.obj</uri>
@@ -56,7 +59,7 @@
         </geometry>
       </visual>
 
-      <collision name="chassis">
+      <collision name="base_link">
         <pose>0.0 0.05 0.625 0 0 0</pose>
         <geometry>
           <box>
@@ -136,13 +139,6 @@
           </box>
         </geometry>
       </collision>
-      
-      <sensor name="imu_sensor" type="imu">
-        <always_on>1</always_on>
-        <update_rate>1</update_rate>
-        <visualize>true</visualize>
-        <topic>imu</topic>
-      </sensor>
     </link>
 
     <link name="steering_wheel">
@@ -440,7 +436,7 @@
 
     <joint type="revolute" name="rear_axle_joint">
       <child>rear_axle</child>
-      <parent>chassis</parent>
+      <parent>base_link</parent>
       <axis>
         <xyz>0 1 0</xyz>
         <limit>
@@ -476,7 +472,7 @@
 
     <joint name="steering_joint" type="revolute">
       <pose>-0.002 0 0 0 0 0</pose>
-      <parent>chassis</parent>
+      <parent>base_link</parent>
       <child>steering_wheel</child>
       <axis>
         <xyz>0 0.964095 0.265556</xyz>
@@ -521,7 +517,7 @@
 
     <joint name="front_left_wheel_steering_joint" type="revolute">
       <child>front_left_wheel_steering_link</child>
-      <parent>chassis</parent>
+      <parent>base_link</parent>
       <axis>
         <xyz>0 0 1</xyz>
         <limit>
@@ -534,7 +530,7 @@
     </joint>
 
     <joint name="front_right_wheel_steering_joint" type="revolute">
-      <parent>chassis</parent>
+      <parent>base_link</parent>
       <child>front_right_wheel_steering_link</child>
       <axis>
         <xyz>0 0 1</xyz>
@@ -597,11 +593,73 @@
       <max_acceleration>30</max_acceleration>
     </plugin>
 
+
+
+
     <!-- SENSORS-->
+
+     <!-- IMU -->
+    <link name="imu_link">
+      <sensor name="imu" type="imu">
+        <always_on>1</always_on>
+        <update_rate>200</update_rate>
+        <visualize>true</visualize>
+        <topic>imu</topic>
+        <ignition_frame_id>imu_link</ignition_frame_id>
+        <imu>
+          <angular_velocity>
+            <x>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>2e-4</stddev>
+              </noise>
+            </x>
+            <y>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>2e-4</stddev>
+              </noise>
+            </y>
+            <z>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>2e-4</stddev>
+              </noise>
+            </z>
+          </angular_velocity>
+          <linear_acceleration>
+            <x>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>1.7e-2</stddev>
+              </noise>
+            </x>
+            <y>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>1.7e-2</stddev>
+              </noise>
+            </y>
+            <z>
+              <noise type="gaussian">
+                <mean>0.0</mean>
+                <stddev>1.7e-2</stddev>
+              </noise>
+            </z>
+          </linear_acceleration>
+        </imu>
+      </sensor>
+    </link>
+    <joint name="imu_joint" type="fixed">
+      <pose>-0.032 0 0.068 0 0 0</pose>
+      <parent>base_link</parent>
+      <child>imu_link</child>
+    </joint>
+
     <!--ŞERİT
     TAKİBİ JABRA Camera-->
     <link name="camera_link">
-      <pose>0 -1.4 1.1 0 -1 -1.5708</pose> <!-- 90 derece sağa çevrilmiş pose -->
+      <pose>0 -2.2 0.8 0 0 -1.5708</pose> <!-- 90 derece sağa çevrilmiş pose -->
       <inertial>
         <mass>0.1</mass>
         <inertia>
@@ -648,12 +706,13 @@
         <update_rate>30</update_rate>
         <visualize>true</visualize>
         <topic>/camera/rgb</topic>
+        <ignition_frame_id>camera_rgb_frame</ignition_frame_id>
       </sensor>
     </link>
 
     <joint name="camera_joint" type="fixed">
       <pose>0 -2.2 0.8 0 0 0</pose> <!-- Kamera bağlantı pozisyonu -->
-      <parent>chassis</parent>
+      <parent>base_link</parent>
       <child>camera_link</child>
     </joint>
 
@@ -692,15 +751,16 @@
       </collision>
 
       <sensor name="gpu_lidar" type="gpu_lidar">
-        <topic>lidar</topic>
+        <topic>scan</topic>
         <pose>0.0 0 0 0 0 0</pose>
+        <ignition_frame_id>lidar_link</ignition_frame_id>
         <ray>
           <scan>
             <horizontal>
               <samples>120</samples>
               <resolution>1</resolution>
-              <min_angle>-0.852</min_angle>
-              <max_angle>0.852</max_angle>
+              <min_angle>-1.252</min_angle>
+              <max_angle>1.252</max_angle>
             </horizontal>
           </scan>
           <range>
@@ -715,17 +775,17 @@
           </noise>
         </ray>
         <always_on>0</always_on>
-        <update_rate>10</update_rate>
+        <update_rate>1</update_rate>
         <visualize>false</visualize>
       </sensor>
     </link>
-    <frame name="lidar_frame" attached_to='chassis'>
+    <frame name="lidar_frame" attached_to='base_link'>
       <pose>0.0 0 0 0 0 0</pose>
     </frame>
 
     <joint name="lidar_joint" type="fixed">
       <pose>0.0 -2.315 0.3 0 0 0</pose>
-      <parent>chassis</parent>
+      <parent>base_link</parent>
       <child>lidar_link</child>
     </joint>
 
@@ -793,21 +853,29 @@
     <!-- ZED Camera Joint -->
     <joint name="zed_camera_joint" type="fixed">
       <pose>0 0 1.5 0 0 0</pose>
-      <parent>chassis</parent>
+      <parent>base_link</parent>
       <child>zed_camera_link</child>
       <!--<pose>0
       2.2 0.8 0 0 0</pose>-->
     </joint>
-    
-    <plugin filename="libignition-gazebo-odometry-publisher-system.so" 
-        name="ignition::gazebo::systems::OdometryPublisher">
-  	<odom_topic>/odom</odom_topic>
-  	<tf_frame>odom</tf_frame>
-  	<child_frame>chassis</child_frame>
-  	<publish_angular_velocity>true</publish_angular_velocity>
-  	<publish_linear_velocity>true</publish_linear_velocity>
-  	<update_rate>50</update_rate>
+
+
+    <!-- Global odometer -->
+    <plugin
+      filename="ignition-gazebo-odometry-publisher-system"
+      name="ignition::gazebo::systems::OdometryPublisher">
+      <odom_publish_frequency>50</odom_publish_frequency>
+      <odom_topic>/odom</odom_topic>
+      <odom_frame>odom</odom_frame>
+      <robot_base_frame>base_link</robot_base_frame>
+      <tf_topic>/odom/tf</tf_topic>
     </plugin>
-   
+
+    <!-- Joint state publisher -->
+    <plugin filename="libignition-gazebo-joint-state-publisher-system.so" 
+      name="ignition::gazebo::systems::JointStatePublisher">
+      <topic>joint_states</topic>
+    </plugin>
+    
   </model>
 </sdf>

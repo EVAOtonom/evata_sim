@@ -10,7 +10,7 @@ from launch.launch_description_sources import PythonLaunchDescriptionSource
 
 def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')
-    world_name = LaunchConfiguration('world_name', default='my_map')
+    world_name = LaunchConfiguration('world_name', default='map')
 
     # Mevcut çalışma dizinini al
     dir_path = os.path.dirname(os.path.realpath(__file__))
