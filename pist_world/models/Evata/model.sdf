@@ -589,7 +589,7 @@
       <left_steering_joint>front_left_wheel_steering_joint</left_steering_joint>
       <right_steering_joint>front_right_wheel_steering_joint</right_steering_joint>
       <kingpin_width>1.0</kingpin_width>
-      <steering_limit>0.5</steering_limit>
+      <steering_limit>0.8727</steering_limit>
       <wheel_base>1.0</wheel_base>
       <wheel_separation>1.572</wheel_separation>
       <wheel_radius>0.31265</wheel_radius>
@@ -797,7 +797,7 @@
 
         <!-- ZED Camera -->
     <link name="zed_camera_link">
-      <pose>0 0 1.5 0 0 -1.5708</pose>
+      <pose>0 0 1.7 0 -0.01 -1.5708</pose>
       <collision name="zedcameracollision">
         <origin xyz="0.02 0 0" rpy="0 0 0" />
         <geometry>

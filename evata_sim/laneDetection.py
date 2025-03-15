@@ -3,10 +3,10 @@ from rclpy.node import Node
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import cv2
+from geometry_msgs.msg import Twist  # Twist mesajı için import
 import os
 import numpy as np
 import time
-from pathlib import Path
 import torch
 from evata_sim.utils.utils import \
     time_synchronized, select_device, increment_path, \
@@ -19,8 +19,6 @@ def letterbox(img, new_shape=(640, 640), color=(114, 114, 114), auto=True, scale
     shape = img.shape[:2]  # current shape [height, width]
     if isinstance(new_shape, int):
         new_shape = (new_shape, new_shape)
-    #print(sem_img.shape)
-    # Scale ratio (new / old)
     r = min(new_shape[0] / shape[0], new_shape[1] / shape[1])
 
     if not scaleup:  # only scale down, do not scale up (for better test mAP)
@@ -55,7 +53,7 @@ class ImageSaver(Node):
         super().__init__('image_saver')
         self.subscription = self.create_subscription(
             Image,
-            '/camera/rgb',
+            '/depth_camera/zed/image',
             self.image_callback,
             10)
         self.bridge = CvBridge()
@@ -73,10 +71,50 @@ class ImageSaver(Node):
         model.eval()
         self.model = model
         self.device = device
-        #self.save_dir = '/home/eva/Desktop/Sefa_deneme/simulation_image'
-        #os.makedirs(self.save_dir, exist_ok=True)
-        #self.latest_image = None
-        #self.timer = self.create_timer(0.01, self.save_latest_image)  # 0.25 saniyede bir çalışır
+        self.sol_sayac = 0
+        self.sag_sayac = 0
+        self.onceki_deger = None
+        self.serit = None
+
+        self.cmd_vel_publisher = self.create_publisher(Twist, '/cmd_vel', 10)
+        self.image_center_x = 640  # Görselin orta noktası (1280x720 için)
+
+    def calculate_steering_angle(self, mid_points):
+        """Orta noktaların x koordinatlarının ortalamasına göre dönme açısını hesapla."""
+        if not mid_points:
+            return 0.0  # Orta nokta yoksa düz git
+
+        # Tüm orta noktaların x koordinatlarını al
+        x_coords = [point[0] for point in mid_points]
+
+        # X koordinatlarının ortalamasını hesapla
+        avg_x = sum(x_coords) / len(x_coords)
+
+        # Görselin orta noktasına göre sapma miktarını hesapla
+        deviation = avg_x - self.image_center_x
+
+        # Sapma miktarını normalize et (örneğin, -1.0 ile 1.0 arasında)
+        max_deviation = self.image_center_x  # Maksimum sapma (640 piksel)
+        steering_angle = deviation / max_deviation  # -1.0 (sola) ile 1.0 (sağa) arasında
+
+        return -steering_angle
+
+    def publish_cmd_vel(self, steering_angle):
+        """Tekerlek açısına göre Twist mesajı gönder."""
+        msg = Twist()
+
+        # İleri hareket için hız değerlerini ayarlayın
+        msg.linear.x = 0.5 # İleri hareket
+        msg.linear.y = 0.0  # Y ekseninde hareket yok
+        msg.linear.z = 0.0  # Z ekseninde hareket yok
+
+        # Dönme hareketi için hız değerlerini ayarlayın
+        msg.angular.x = 0.0  # Dönme hareketi yok
+        msg.angular.y = 0.0  # Dönme hareketi yok
+        msg.angular.z = steering_angle  # Hesaplanan dönme açısı
+
+        self.cmd_vel_publisher.publish(msg)
+        self.get_logger().info(f"Publishing: linear.x={msg.linear.x}, angular.z={msg.angular.z}")
 
     def image_callback(self, msg):
         try:
@@ -85,41 +123,10 @@ class ImageSaver(Node):
         except Exception as e:
             self.get_logger().error(f'Failed to process image: {e}')
 
-    #def save_latest_image(self):
-    #    if self.latest_image is not None:
-    #        image_path = os.path.join(self.save_dir, 'image.jpg')
-    #        cv2.imwrite(image_path, self.latest_image)
-    #        self.get_logger().info(f'Image saved: {image_path}')
-    #        
-    #        # Call the detection function after saving the image
-    #        self.detect(image_path)
 
     def detect(self, source, imgsz=640, conf_thres=0.3, iou_thres=0.45, 
                device='0', classes=None, agnostic_nms=False,):
-        # setting and directories
-        # save_img = not nosave and not source.endswith('.txt')  # save inference images
-        # save_dir = Path(increment_path(Path(project) / name, exist_ok=exist_ok))  # increment run
-        # (save_dir / 'labels' if save_txt else save_dir).mkdir(parents=True, exist_ok=True)  # make dir
-
-        # inf_time = AverageMeter()
-        # waste_time = AverageMeter()
-        # nms_time = AverageMeter()
-
-        # Load model
         stride = 32
-        # model = torch.jit.load(weights)
-        # device = select_device(device)
-        # half = device.type != 'cpu'  # half precision only supported on CUDA
-        # model = model.to(device)
-
-        # if half:
-        #     model.half()  # to FP16  
-        # model.eval()
-
-        # Set Dataloader
-        #vid_path, vid_writer = None, None
-        #dataset = LoadImages(source, img_size=imgsz, stride=stride)
-        ###############################################################################################
         model = self.model
         device = self.device
         half = device.type != 'cpu'
@@ -134,7 +141,6 @@ class ImageSaver(Node):
         if device.type != 'cpu':
             model(torch.zeros(1, 3, imgsz, imgsz).to(device).type_as(next(model.parameters())))  # run once
         t0 = time.time()
-        #for path, img, im0s in dataset:
         im0s = img0
         img = torch.from_numpy(img).to(device)
         img = img.half() if half else img.float()  # uint8 to fp16/32
@@ -147,8 +153,6 @@ class ImageSaver(Node):
             [pred, anchor_grid], seg, ll = model(img)
             t2 = time_synchronized()
 
-        # waste time: the incompatibility of torch.jit.trace causes extra time consumption in demo version 
-        # but this problem will not appear in official version 
         tw1 = time_synchronized()
         pred = split_for_trace_model(pred, anchor_grid)
         tw2 = time_synchronized()
@@ -160,38 +164,162 @@ class ImageSaver(Node):
 
         da_seg_mask = driving_area_mask(seg)
         ll_seg_mask = lane_line_mask(ll)
+        # Kameranın orta noktasını belirleme
+        mid_point = im0s.shape[1] // 2
+
+        # Şerit çizgilerinin koordinatlarını bulma
+        y_coords, x_coords = np.where(ll_seg_mask == 1)
+
+        # Sol ve sağ şerit çizgilerini ayırma
+        sol_mask = x_coords < mid_point
+        sag_mask = x_coords >= mid_point
+
+        sol = list(zip(y_coords[sol_mask], x_coords[sol_mask]))
+        sag = list(zip(y_coords[sag_mask], x_coords[sag_mask]))
+
+        
+
+        # Hangi tarafta daha fazla nokta olduğunu belirle
+        if len(sol) < len(sag):
+            mevcut_deger = 0
+        elif len(sag) < len(sol):
+            mevcut_deger = 1
+        else:
+            mevcut_deger = None  # Eşitse veya hiç nokta yoksa
+
+        # Önceki değerle karşılaştır
+        if mevcut_deger == self.onceki_deger:
+            if mevcut_deger == 0:
+                self.sol_sayac += 1
+            elif mevcut_deger == 1:
+                self.sag_sayac += 1
+        else:
+            # Değer değişti, sayaçları sıfırla
+            print("else girdi")
+            self.sol_sayac = 0
+            self.sag_sayac = 0
+            self.onceki_deger = mevcut_deger
+
+
+        # Eğer 100 kere üst üste aynı değer gelirse ekrana yazdır
+        if self.sol_sayac >= 100:
+            self.serit = "sol"
+            self.sol_sayac = 0  # Sayaçı sıfırla (isteğe bağlı)
+            print("sol")
+        elif self.sag_sayac >= 50:
+            self.serit = "sag"
+            self.sag_sayac = 0  # Sayaçı sıfırla (isteğe bağlı)
+            print("sağ")
+
+        roi_y_start = 400
+        roi_y_end = 720
+        def get_roi_x_bounds(y):
+            if y < roi_y_start or y > roi_y_end:
+                return None, None
+            # Lineer interpolasyon ile x1 ve x2 değerlerini hesapla
+            x1 = int(500 + (y - roi_y_start) * (200 - 500) / (roi_y_end - roi_y_start))
+            x2 = int(720 + (y - roi_y_start) * (1100 - 720) / (roi_y_end - roi_y_start))
+            return x1, x2
+
+        # Üçgen şeklinde ROI tanımlama
+        #roi_y_end = 720  # Taban y seviyesi
+        #roi_y_start = 350  # Tepe y seviyesi
+        #roi_x_bottom_left = 200  # Taban sol x
+        #roi_x_bottom_right = 1100  # Taban sağ x
+        #roi_x_top = 640  # Tepe x
+#
+        ## Üçgenin x sınırlarını hesaplama (y değerine göre lineer interpolasyon)
+        #def get_roi_x_bounds(y):
+        #    if y < roi_y_start or y > roi_y_end:
+        #        return None, None
+        #    # Lineer interpolasyon ile x1 ve x2 değerlerini hesapla
+        #    x1 = int(roi_x_top + (y - roi_y_start) * (roi_x_bottom_left - roi_x_top) / (roi_y_end - roi_y_start))
+        #    x2 = int(roi_x_top + (y - roi_y_start) * (roi_x_bottom_right - roi_x_top) / (roi_y_end - roi_y_start))
+        #    return x1, x2
+
+        # ROI içindeki ll_seg_mask değerlerini bulma
+        roi_mask = (y_coords >= roi_y_start) & (y_coords <= roi_y_end)
+        roi_y_coords = y_coords[roi_mask]
+        roi_x_coords = x_coords[roi_mask]
+
+        mid_points = []
+
+        # Her 10 y değeri için işlem yapma
+        for y in range(roi_y_start, roi_y_end + 1):
+            x1, x2 = get_roi_x_bounds(y)
+            if x1 is None or x2 is None:
+                continue
+
+            # Belirli bir y değeri için x sınırlarını uygula
+            y_mask = roi_y_coords == y
+            x_values = roi_x_coords[y_mask & (roi_x_coords >= x1) & (roi_x_coords <= x2)]
+            if len(x_values) >= 2:
+                # Birbirinden en az 100 piksel uzak olan iki x değeri bulma
+                x_values_sorted = np.sort(x_values)
+                x_diff = np.diff(x_values_sorted)
+                valid_pairs = np.where(x_diff >= 50)[0]
+                if len(valid_pairs) > 0:
+                    x1_pair = x_values_sorted[valid_pairs[0]]
+                    x2_pair = x_values_sorted[valid_pairs[0] + 1]
+                    mid_x = (x1_pair + x2_pair) // 2
+                    mid_points.append((mid_x, y))  # Orta noktayı listeye ekle
+                    print(f"y = {y}, x1 = {x1_pair}, x2 = {x2_pair}, Orta Nokta = ({mid_x}, {y})")
+
+
+        # ROI alanını ana görselde belirginleştirme (dikdörtgen çizme)
+        roi_top_left = (get_roi_x_bounds(roi_y_start)[0], roi_y_start)
+        roi_top_right = (get_roi_x_bounds(roi_y_start)[1], roi_y_start)
+        roi_bottom_left = (get_roi_x_bounds(roi_y_end)[0], roi_y_end)
+        roi_bottom_right = (get_roi_x_bounds(roi_y_end)[1], roi_y_end)
+        roi_pts = np.array([roi_top_left, roi_top_right, roi_bottom_right, roi_bottom_left], np.int32)
+        roi_pts = roi_pts.reshape((-1, 1, 2))
+        cv2.polylines(im0s, [roi_pts], isClosed=True, color=(255, 0, 0), thickness=2)
+
+        #roi_pts = np.array([
+        #    [roi_x_bottom_left, roi_y_end],  # Sol alt köşe
+        #    [roi_x_bottom_right, roi_y_end],  # Sağ alt köşe
+        #    [roi_x_top, roi_y_start]  # Tepe noktası
+        #], np.int32)
+        #roi_pts = roi_pts.reshape((-1, 1, 2))
+        #cv2.polylines(im0s, [roi_pts], isClosed=True, color=(255, 0, 0), thickness=2)
+
+        # ROI alanını kırpma ve yeni pencerede gösterme
+        #roi_im0s = im0s[roi_y_start:roi_y_end, :]  # ROI alanını kırp
+
+        if len(mid_points) >= 2:
+            for i in range(1, len(mid_points)):
+                cv2.line(im0s, mid_points[i - 1], mid_points[i], (0, 255, 0), thickness=2)
+            # Orta noktaları daire olarak çiz
+            for point in mid_points:
+                cv2.circle(im0s, point, radius=5, color=(0, 0, 255), thickness=-1)
+
+            # Tekerlek açısını hesapla ve gönder
+            steering_angle = self.calculate_steering_angle(mid_points)
+            self.publish_cmd_vel(steering_angle)
+        
 
             # Process detections
         for i, det in enumerate(pred):  # detections per image
-            #p, s, im0, frame = path, '', im0s, getattr(dataset, 'frame', 0)
-            #p = Path(p)  # to Path
-            #save_path = str(save_dir / p.name)  # img.jpg
-            #txt_path = str(save_dir / 'labels' / p.stem) + ('' if dataset.mode == 'image' else f'_{frame}')  # img.txt
-            #s += '%gx%g ' % img.shape[2:]  # print string
-            #gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]  # normalization gain whwh
             if len(det):
                 # Rescale boxes from img_size to im0 size
                 det[:, :4] = scale_coords(img.shape[2:], det[:, :4], im0s.shape).round()
-                for c in det[:, -1].unique():
-                    n = (det[:, -1] == c).sum()  # detections per class
                 # Write results
                 for *xyxy, conf, cls in reversed(det):
-                    # if save_txt:  # Write to file
-                    #     xywh = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
-                    #     line = (cls, *xywh, conf) if save_conf else (cls, *xywh)  # label format
-                    #     with open(txt_path + '.txt', 'a') as f:
-                    #         f.write(('%g ' * len(line)).rstrip() % line + '\n')
-                    # if save_img:  # Add bbox to image
                     plot_one_box(xyxy, im0s, line_thickness=3)
             # Show result
             show_seg_result(im0s, (da_seg_mask, ll_seg_mask), is_demo=True)
-            # Save results
-            # if save_img:
-            #     cv2.imwrite(save_path, im0)
-            #     print(f" The image with the result is saved in: {save_path}")
+            cv2.putText(im0s, f"Serit = {self.serit}", (10,30), cv2.FONT_HERSHEY_SIMPLEX,
+                        1, (0,255,0), 2, cv2.LINE_AA)
+            if len(mid_points) >= 2:
+                for i in range(1, len(mid_points)):
+                    cv2.line(im0s, mid_points[i - 1], mid_points[i], (0, 255, 0), thickness=2)
+                # Orta noktaları daire olarak çiz
+                for point in mid_points:
+                    cv2.circle(im0s, point, radius=5, color=(0, 0, 255), thickness=-1)
             cv2.imshow("hasan",im0s)
+            #cv2.imshow("ROI", roi_im0s)
             cv2.waitKey(1)
-        print(f'Done. ({time.time() - t0:.3f}s)')
+        #print(f'Done. ({time.time() - t0:.3f}s)')
 
 
 def main(args=None):
