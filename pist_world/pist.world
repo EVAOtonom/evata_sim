@@ -3,6 +3,9 @@
   <world name='PIST'>
     <scene>
       <grid>false</grid>
+      <ambient>0.4 0.4 0.4 1</ambient>
+      <background>0.274 0.353 1 0</background>
+      <shadows>0</shadows>
     </scene>
     <plugin
       filename="ignition-gazebo-physics-system"
