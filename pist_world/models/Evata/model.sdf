@@ -717,7 +717,7 @@
     </link>
 
     <joint name="camera_joint" type="fixed">
-      <pose>0 -2.2 0.8 0 0 0</pose> <!-- Kamera bağlantı pozisyonu -->
+      <pose>0 0 0 0 0 0</pose> <!-- Kamera bağlantı pozisyonu -->
       <parent>base_link</parent>
       <child>camera_link</child>
     </joint>
@@ -763,10 +763,10 @@
         <ray>
           <scan>
             <horizontal>
-              <samples>120</samples>
+              <samples>360</samples>
               <resolution>1</resolution>
-              <min_angle>-1.252</min_angle>
-              <max_angle>1.252</max_angle>
+              <min_angle>-1.5</min_angle>
+              <max_angle>1.5</max_angle>
             </horizontal>
           </scan>
           <range>
@@ -780,8 +780,8 @@
             <stddev>0.001</stddev>
           </noise>
         </ray>
-        <always_on>0</always_on>
-        <update_rate>1</update_rate>
+        <always_on>true</always_on>
+        <update_rate>5</update_rate>
         <visualize>false</visualize>
       </sensor>
     </link>
@@ -790,7 +790,7 @@
     </frame>
 
     <joint name="lidar_joint" type="fixed">
-      <pose>0.0 -2.315 0.3 0 0 0</pose>
+      <pose>0 0 0 0 0 0</pose>
       <parent>base_link</parent>
       <child>lidar_link</child>
     </joint>
