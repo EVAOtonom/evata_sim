@@ -29,7 +29,9 @@ def generate_launch_description():
 		'/depth_camera/zed/camera_info@sensor_msgs/msg/CameraInfo@ignition.msgs.CameraInfo',
 		'/depth_camera/zed/depth_image@sensor_msgs/msg/Image@ignition.msgs.Image',
 		'/depth_camera/zed/image@sensor_msgs/msg/Image@ignition.msgs.Image',
-		'/depth_camera/zed/points@sensor_msgs/msg/PointCloud2@ignition.msgs.PointCloudPacked'
+		'/depth_camera/zed/points@sensor_msgs/msg/PointCloud2@ignition.msgs.PointCloudPacked',
+        '/helios@sensor_msgs/msg/LaserScan@ignition.msgs.LaserScan',
+        '/helios/points@sensor_msgs/msg/PointCloud2@ignition.msgs.PointCloudPacked'
 
 
             

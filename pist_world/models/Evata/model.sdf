@@ -4,7 +4,7 @@
   <model name="Evata">
     <pose>0 0 0 0 0 0</pose>
 
-    <link name="base_footprint"/>
+    <link name="base_footprint" />
 
     <link name="base_link">
       <inertial>
@@ -140,8 +140,8 @@
         </geometry>
       </collision>
     </link>
-    
-     <joint name="base_joint" type="fixed">
+
+    <joint name="base_joint" type="fixed">
       <pose>0 0 0.01 0 0 0</pose>
       <parent>base_footprint</parent>
       <child>base_link</child>
@@ -600,11 +600,9 @@
     </plugin>
 
 
-
-
     <!-- SENSORS-->
 
-     <!-- IMU -->
+    <!-- IMU -->
     <link name="imu_link">
       <sensor name="imu" type="imu">
         <always_on>1</always_on>
@@ -795,7 +793,85 @@
       <child>lidar_link</child>
     </joint>
 
-        <!-- ZED Camera -->
+    <!-- 3D SENSÖR -->
+    <link name="lidar_link_3d">
+      <pose>0.0 0.45 2.15 0 0 -1.5708</pose>
+      <inertial>
+        <mass>0.1</mass>
+        <inertia>
+          <ixx>0.0001</ixx>
+          <iyy>0.0001</iyy>
+          <izz>0.0001</izz>
+        </inertia>
+      </inertial>
+      <visual name="lidar_visual_3d">
+        <!-- TODO: add lidar model here -->
+        <geometry>
+          <box>
+            <size>0.1 0.1 0.1</size>
+          </box>
+        </geometry>
+        <material>
+          <script>
+            <uri>file://media/materials/scripts/gazebo.material</uri>
+            <name>Gazebo/Grey</name>
+          </script>
+        </material>
+      </visual>
+      <collision name="lidar_collision_3d">
+        <geometry>
+          <box>
+            <size>0.1 0.1 0.1</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <sensor name="gpu_lidar_3d" type="gpu_lidar">
+        <topic>helios</topic>
+        <pose>0.0 0 0 0 0 0</pose>
+        <ignition_frame_id>lidar_link</ignition_frame_id>
+        <ray>
+          <scan>
+            <horizontal>
+              <samples>900</samples>
+              <resolution>1</resolution>
+              <min_angle>-3.14159</min_angle>
+              <max_angle>3.14159</max_angle>
+            </horizontal>
+            <vertical>
+              <samples>52.63</samples>
+              <resolution>1</resolution>
+              <min_angle>-0.95993</min_angle>
+              <max_angle>0.261799</max_angle>
+            </vertical>
+          </scan>
+          <range>
+            <min>0.060</min>
+            <max>30</max>
+            <resolution>0.01</resolution>
+          </range>
+          <noise>
+            <type>gaussian</type>
+            <mean>0.0</mean>
+            <stddev>0.001</stddev>
+          </noise>
+        </ray>
+        <always_on>0</always_on>
+        <update_rate>5</update_rate>
+        <visualize>false</visualize>
+      </sensor>
+    </link>
+    <frame name="lidar_frame_3d" attached_to='base_link'>
+      <pose>0.0 0 0 0 0 0</pose>
+    </frame>
+
+    <joint name="lidar_joint_3d" type="fixed">
+      <pose>0.0 -2.315 0.3 0 0 0</pose>
+      <parent>base_link</parent>
+      <child>lidar_link_3d</child>
+    </joint>
+
+    <!-- ZED Camera -->
     <link name="zed_camera_link">
       <pose>0 0 1.7 0 -0.01 -1.5708</pose>
       <collision name="zedcameracollision">
@@ -878,11 +954,11 @@
     </plugin>
 
     <!-- Joint state publisher -->
-    <plugin filename="libignition-gazebo-joint-state-publisher-system.so" 
+    <plugin filename="libignition-gazebo-joint-state-publisher-system.so"
       name="ignition::gazebo::systems::JointStatePublisher">
       <topic>joint_states</topic>
     </plugin>
-    
-    
+
+
   </model>
 </sdf>
