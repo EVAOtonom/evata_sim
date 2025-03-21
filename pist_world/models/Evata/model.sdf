@@ -866,7 +866,7 @@
     </frame>
 
     <joint name="lidar_joint_3d" type="fixed">
-      <pose>0.0 -2.315 0.3 0 0 0</pose>
+      <pose>0.0 0 0.0 0 0 0</pose>
       <parent>base_link</parent>
       <child>lidar_link_3d</child>
     </joint>
