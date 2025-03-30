@@ -79,6 +79,7 @@ class ImageSaver(Node):
         self.cmd_vel_publisher = self.create_publisher(Twist, '/cmd_vel', 10)
         self.image_center_x = 640  # Görselin orta noktası (1280x720 için)
 
+
     def calculate_steering_angle(self, mid_points):
         """Orta noktaların x koordinatlarının ortalamasına göre dönme açısını hesapla."""
         if not mid_points:
@@ -211,38 +212,22 @@ class ImageSaver(Node):
             self.sag_sayac = 0  # Sayaçı sıfırla (isteğe bağlı)
             print("sağ")
 
-        roi_y_start = 400
+        roi_y_start = 520
         roi_y_end = 720
         def get_roi_x_bounds(y):
             if y < roi_y_start or y > roi_y_end:
                 return None, None
             # Lineer interpolasyon ile x1 ve x2 değerlerini hesapla
-            x1 = int(500 + (y - roi_y_start) * (200 - 500) / (roi_y_end - roi_y_start))
-            x2 = int(720 + (y - roi_y_start) * (1100 - 720) / (roi_y_end - roi_y_start))
+            x1 = int(430 + (y - roi_y_start) * (200 - 430) / (roi_y_end - roi_y_start))
+            x2 = int(870 + (y - roi_y_start) * (1100 - 870) / (roi_y_end - roi_y_start))
             return x1, x2
 
-        # Üçgen şeklinde ROI tanımlama
-        #roi_y_end = 720  # Taban y seviyesi
-        #roi_y_start = 350  # Tepe y seviyesi
-        #roi_x_bottom_left = 200  # Taban sol x
-        #roi_x_bottom_right = 1100  # Taban sağ x
-        #roi_x_top = 640  # Tepe x
-#
-        ## Üçgenin x sınırlarını hesaplama (y değerine göre lineer interpolasyon)
-        #def get_roi_x_bounds(y):
-        #    if y < roi_y_start or y > roi_y_end:
-        #        return None, None
-        #    # Lineer interpolasyon ile x1 ve x2 değerlerini hesapla
-        #    x1 = int(roi_x_top + (y - roi_y_start) * (roi_x_bottom_left - roi_x_top) / (roi_y_end - roi_y_start))
-        #    x2 = int(roi_x_top + (y - roi_y_start) * (roi_x_bottom_right - roi_x_top) / (roi_y_end - roi_y_start))
-        #    return x1, x2
-
-        # ROI içindeki ll_seg_mask değerlerini bulma
         roi_mask = (y_coords >= roi_y_start) & (y_coords <= roi_y_end)
         roi_y_coords = y_coords[roi_mask]
         roi_x_coords = x_coords[roi_mask]
 
         mid_points = []
+        fallback_points = []  # Yedek noktalar için liste
 
         # Her 10 y değeri için işlem yapma
         for y in range(roi_y_start, roi_y_end + 1):
@@ -253,6 +238,7 @@ class ImageSaver(Node):
             # Belirli bir y değeri için x sınırlarını uygula
             y_mask = roi_y_coords == y
             x_values = roi_x_coords[y_mask & (roi_x_coords >= x1) & (roi_x_coords <= x2)]
+            
             if len(x_values) >= 2:
                 # Birbirinden en az 100 piksel uzak olan iki x değeri bulma
                 x_values_sorted = np.sort(x_values)
@@ -264,7 +250,19 @@ class ImageSaver(Node):
                     mid_x = (x1_pair + x2_pair) // 2
                     mid_points.append((mid_x, y))  # Orta noktayı listeye ekle
                     print(f"y = {y}, x1 = {x1_pair}, x2 = {x2_pair}, Orta Nokta = ({mid_x}, {y})")
+                else:
+                    for x in x_values:
+                        adjusted_x = x - 275
+                        # ROI sınırları içinde kalacak şekilde ayarla
+                        adjusted_x = max(x1, min(x2, adjusted_x))
+                        if adjusted_x > x1:
+                            fallback_points.append((adjusted_x, y))
+                            print(f"Fallback: y = {y}, min_x = {adjusted_x}, adjusted_x = {adjusted_x}")
 
+        # Eğer mid_points boşsa, fallback_points'i kullan
+        if not mid_points and fallback_points:
+            mid_points = fallback_points
+            print("Using fallback points")
 
         # ROI alanını ana görselde belirginleştirme (dikdörtgen çizme)
         roi_top_left = (get_roi_x_bounds(roi_y_start)[0], roi_y_start)
@@ -275,16 +273,6 @@ class ImageSaver(Node):
         roi_pts = roi_pts.reshape((-1, 1, 2))
         cv2.polylines(im0s, [roi_pts], isClosed=True, color=(255, 0, 0), thickness=2)
 
-        #roi_pts = np.array([
-        #    [roi_x_bottom_left, roi_y_end],  # Sol alt köşe
-        #    [roi_x_bottom_right, roi_y_end],  # Sağ alt köşe
-        #    [roi_x_top, roi_y_start]  # Tepe noktası
-        #], np.int32)
-        #roi_pts = roi_pts.reshape((-1, 1, 2))
-        #cv2.polylines(im0s, [roi_pts], isClosed=True, color=(255, 0, 0), thickness=2)
-
-        # ROI alanını kırpma ve yeni pencerede gösterme
-        #roi_im0s = im0s[roi_y_start:roi_y_end, :]  # ROI alanını kırp
 
         if len(mid_points) >= 2:
             for i in range(1, len(mid_points)):
