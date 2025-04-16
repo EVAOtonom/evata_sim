@@ -45,9 +45,9 @@ def generate_launch_description():
             '-name', "Evata",
             '-file', os.path.join(src_dir, "src", "evata_sim", "pist_world", "models", "Evata", "model.sdf"),
             '-allow_renaming', 'true',
-            '-x', '-2.0',
-            '-y', '-0.5',
-            '-z', '0.01'
+            '-x', '0.0',
+            '-y', '0.0',
+            '-z', '0.6'
         ],
     )
 

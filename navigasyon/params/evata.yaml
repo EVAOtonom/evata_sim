@@ -43,7 +43,7 @@ bt_navigator:
   ros__parameters:
     use_sim_time: True
     global_frame: map
-    robot_base_frame: base_link
+    robot_base_frame: base_footprint
     odom_topic: /odom
     bt_loop_duration: 10
     default_server_timeout: 20
@@ -110,6 +110,7 @@ bt_navigator_navigate_to_pose_rclcpp_node:
 
 controller_server:
   ros__parameters:
+
     use_sim_time: True
     controller_frequency: 20.0
     min_x_velocity_threshold: 0.001
@@ -185,13 +186,13 @@ local_costmap:
       update_frequency: 5.0
       publish_frequency: 2.0
       global_frame: odom
-      robot_base_frame: base_link
+      robot_base_frame: base_footprint
       use_sim_time: True
       rolling_window: true
       width: 10
       height: 10
       resolution: 0.05
-      footprint: "[[-0.8763, -2.1], [0.8763, -2.1], [0.8763, 2.1], [-0.8763, 2.1]]"  # Robotun boyutlarına göre güncellendi
+      footprint: "[[-0.96, -0.58], [0.96, -0.58], [0.96, 0.58], [-0.96, 0.58]]"
       plugins: ["voxel_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
@@ -228,9 +229,9 @@ global_costmap:
       update_frequency: 1.0
       publish_frequency: 1.0
       global_frame: map
-      robot_base_frame: base_link
+      robot_base_frame: base_footprint
       use_sim_time: True
-      footprint: "[[-0.8763, -2.1], [0.8763, -2.1], [0.8763, 2.1], [-0.8763, 2.1]]"  # Robotun boyutlarına göre güncellendi
+      footprint: "[[-0.96, -0.58], [0.96, -0.58], [0.96, 0.58], [-0.96, 0.58]]"
       resolution: 0.05
       track_unknown_space: true
       plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
@@ -310,7 +311,7 @@ behavior_server:
     assisted_teleop:
       plugin: "nav2_behaviors/AssistedTeleop"
     global_frame: odom
-    robot_base_frame: base_link
+    robot_base_frame: base_footprint
     transform_tolerance: 0.1
     use_sim_time: true
     simulate_ahead_time: 2.0
@@ -339,7 +340,7 @@ velocity_smoother:
     smoothing_frequency: 20.0
     scale_velocities: False
     feedback: "OPEN_LOOP"
-    max_velocity: [0.26, 0.0, 1.0]
+    max_velocity: [1.0, 0.0, 1.0]
     min_velocity: [-0.26, 0.0, -1.0]
     max_accel: [2.5, 0.0, 3.2]
     max_decel: [-2.5, 0.0, -3.2]
