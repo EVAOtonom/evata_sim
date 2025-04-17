@@ -653,7 +653,7 @@
 
   <!-- Arac  --> 
 	<model name="Evata">
-	  <pose>32.6016 43.6005 0 0 0 -1.5718</pose> <!-- x, y, z, roll, pitch, yaw -->
+	  <pose>32.6016 43.6005 0.5 0 0 -3.14</pose> <!-- x, y, z, roll, pitch, yaw -->
 	<include>
 	   <uri>
 		model://Evata
