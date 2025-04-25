@@ -23,31 +23,19 @@
       <self_collide>0</self_collide>
       <kinematic>0</kinematic>
       <enable_wind>0</enable_wind>
+      
       <visual name='visual'>
-        <pose>0 0 0 0 -0 0</pose>
+        <pose>0 0 0 0 0 0</pose>
         <geometry>
           <mesh>
             <uri>model://Evata/meshes/body.dae</uri>
             <scale>1 1 1</scale>
           </mesh>
         </geometry>
-        <material>
-          <lighting>1</lighting>
-          <script>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-            <name>Gazebo/Red</name>
-          </script>
-          <shader type='pixel'>
-            <normal_map>__default__</normal_map>
-          </shader>
-          <ambient>0.3 0.3 0.3 1</ambient>
-          <diffuse>0.7 0.7 0.7 1</diffuse>
-          <specular>0.01 0.01 0.01 1</specular>
-          <emissive>0 0 0 1</emissive>
-        </material>
         <transparency>0</transparency>
         <cast_shadows>1</cast_shadows>
       </visual>
+     
       <collision name='collision'>
         <laser_retro>0</laser_retro>
         <max_contacts>10</max_contacts>
@@ -146,20 +134,6 @@
             <scale>1 1 1</scale>
           </mesh>
         </geometry>
-        <material>
-          <lighting>1</lighting>
-          <script>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-            <name>Gazebo/Black</name>
-          </script>
-          <shader type='pixel'>
-            <normal_map>__default__</normal_map>
-          </shader>
-          <ambient>0.3 0.3 0.3 1</ambient>
-          <diffuse>0.7 0.7 0.7 1</diffuse>
-          <specular>0.01 0.01 0.01 1</specular>
-          <emissive>0 0 0 1</emissive>
-        </material>
         <transparency>0</transparency>
         <cast_shadows>1</cast_shadows>
       </visual>
@@ -259,20 +233,6 @@
             <scale>1 1 1</scale>
           </mesh>
         </geometry>
-        <material>
-          <lighting>1</lighting>
-          <script>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-            <name>Gazebo/Grey</name>
-          </script>
-          <shader type='pixel'>
-            <normal_map>__default__</normal_map>
-          </shader>
-          <ambient>0.3 0.3 0.3 1</ambient>
-          <diffuse>0.7 0.7 0.7 1</diffuse>
-          <specular>0.01 0.01 0.01 1</specular>
-          <emissive>0 0 0 1</emissive>
-        </material>
         <transparency>0</transparency>
         <cast_shadows>1</cast_shadows>
       </visual>
@@ -372,20 +332,6 @@
             <scale>1 1 1</scale>
           </mesh>
         </geometry>
-        <material>
-          <lighting>1</lighting>
-          <script>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-            <name>Gazebo/Grey</name>
-          </script>
-          <shader type='pixel'>
-            <normal_map>__default__</normal_map>
-          </shader>
-          <ambient>0.3 0.3 0.3 1</ambient>
-          <diffuse>0.7 0.7 0.7 1</diffuse>
-          <specular>0.01 0.01 0.01 1</specular>
-          <emissive>0 0 0 1</emissive>
-        </material>
         <transparency>0</transparency>
         <cast_shadows>1</cast_shadows>
       </visual>
@@ -473,20 +419,9 @@
             <scale>1 1 1</scale>
           </mesh>
         </geometry>
-        <material>
-          <lighting>1</lighting>
-          <script>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-            <name>Gazebo/Grey</name>
-          </script>
-          <shader type='pixel'>
-            <normal_map>__default__</normal_map>
-          </shader>
-          <ambient>0.3 0.3 0.3 1</ambient>
-          <diffuse>0.7 0.7 0.7 1</diffuse>
-          <specular>0.01 0.01 0.01 1</specular>
-          <emissive>0 0 0 1</emissive>
-        </material>
+    
+    
+    
         <transparency>0</transparency>
         <cast_shadows>1</cast_shadows>
       </visual>
@@ -745,12 +680,6 @@
             <size>0.1 0.1 0.1</size>
           </box>
         </geometry>
-        <material>
-          <script>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-            <name>Gazebo/Black</name>
-          </script>
-        </material>
       </visual>
       <collision name="camera_collision">
         <geometry>
@@ -806,12 +735,6 @@
             <size>0.1 0.05 0.05</size>
           </box>
         </geometry>
-        <material>
-          <script>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-            <name>Gazebo/Black</name>
-          </script>
-        </material>
       </visual>
       <collision name="lidar_collision">
         <geometry>
@@ -878,12 +801,6 @@
             <size>0.1 0.05 0.05</size>
           </box>
         </geometry>
-        <material>
-          <script>
-            <uri>file://media/materials/scripts/gazebo.material</uri>
-            <name>Gazebo/Black</name>
-          </script>
-        </material>
       </visual>
       <collision name="lidar_collision_3d">
         <geometry>
@@ -956,12 +873,6 @@
           <box>
             <size>0.2 0.05 0.08</size>
           </box>
-          <material>
-            <script>
-              <uri>file://media/materials/scripts/gazebo.material</uri>
-              <name>Gazebo/Black</name>
-            </script>
-          </material>
         </geometry>
       </visual>
       <inertial>
