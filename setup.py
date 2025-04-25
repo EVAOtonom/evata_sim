@@ -14,6 +14,7 @@ setup(
         ('share/' + package_name, ['package.xml']),
         # Launch dosyalarını ekliyoruz
         (os.path.join('share', package_name, 'launch'), glob('launch/*.py')),
+        (os.path.join('share', package_name, 'gps_data'), ['evata_sim/gps_map.txt']),
     ],
     install_requires=['setuptools'],
     zip_safe=False,
@@ -31,7 +32,8 @@ setup(
             "odom=" +package_name +".odom:main",
             "zed_test=" +package_name +".zed_test:main",
             "laneDetection=" +package_name +".laneDetection:main",
-            "sign_converted=" +package_name +".sign_converted:main"
+            "sign_converted=" +package_name +".sign_converted:main",
+            "live_gps=" +package_name +".live_gps:main"
         ],
     },
 )
