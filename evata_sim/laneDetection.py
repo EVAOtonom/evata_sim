@@ -4,6 +4,9 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import cv2
 from geometry_msgs.msg import Twist  # Twist mesajı için import
+from sensor_msgs.msg import PointCloud2, PointField
+from sensor_msgs_py import point_cloud2
+import math
 import os
 import numpy as np
 import time
@@ -56,6 +59,8 @@ class ImageSaver(Node):
             '/depth_camera/zed/image',
             self.image_callback,
             10)
+        self.create_subscription(PointCloud2, "/depth_camera/zed/points", self.point_cloud_callback, 10)
+
         self.bridge = CvBridge()
         dir_path = os.path.dirname(os.path.realpath(__file__))
         src_dir = dir_path.split('/install')[0]  # install kısmını çıkar
@@ -65,6 +70,7 @@ class ImageSaver(Node):
         device = select_device(device)
         half = device.type != 'cpu'  # half precision only supported on CUDA
         model = model.to(device)
+        self.latest_pointcloud = None
 
         if half:
             model.half()  # to FP16  
@@ -77,6 +83,8 @@ class ImageSaver(Node):
         self.serit = None
 
         self.cmd_vel_publisher = self.create_publisher(Twist, '/cmd_vel', 10)
+        self.filtered_pointcloud_pub = self.create_publisher(PointCloud2, '/lane_pointcloud', 10)
+
         self.image_center_x = 640  # Görselin orta noktası (1280x720 için)
 
 
@@ -114,8 +122,8 @@ class ImageSaver(Node):
         msg.angular.y = 0.0  # Dönme hareketi yok
         msg.angular.z = steering_angle  # Hesaplanan dönme açısı
 
-        self.cmd_vel_publisher.publish(msg)
-        self.get_logger().info(f"Publishing: linear.x={msg.linear.x}, angular.z={msg.angular.z}")
+        #self.cmd_vel_publisher.publish(msg)
+        #self.get_logger().info(f"Publishing: linear.x={msg.linear.x}, angular.z={msg.angular.z}")
 
     def image_callback(self, msg):
         try:
@@ -123,6 +131,12 @@ class ImageSaver(Node):
             self.detect(self.latest_image)
         except Exception as e:
             self.get_logger().error(f'Failed to process image: {e}')
+    
+    def point_cloud_callback(self, msg):
+        self.latest_pointcloud = msg
+        # Store camera info if available (you might need to subscribe to camera info topic)
+        if hasattr(msg, 'header'):
+            self.latest_pointcloud_header = msg.header
 
 
     def detect(self, source, imgsz=640, conf_thres=0.3, iou_thres=0.45, 
@@ -132,6 +146,7 @@ class ImageSaver(Node):
         device = self.device
         half = device.type != 'cpu'
         img0 = cv2.resize(source, (1280,720), interpolation=cv2.INTER_LINEAR)
+        #img0 = source
         img = letterbox(img0, imgsz, stride=stride)[0]
         
         # Convert
@@ -228,6 +243,7 @@ class ImageSaver(Node):
 
         mid_points = []
         fallback_points = []  # Yedek noktalar için liste
+        all_points = [] # PointCloud paylaşımı için
 
         # Her 10 y değeri için işlem yapma
         for y in range(roi_y_start, roi_y_end + 1):
@@ -239,7 +255,9 @@ class ImageSaver(Node):
             y_mask = roi_y_coords == y
             x_values = roi_x_coords[y_mask & (roi_x_coords >= x1) & (roi_x_coords <= x2)]
             
+            
             if len(x_values) >= 2:
+                all_points.extend([(x, y) for x in x_values])
                 # Birbirinden en az 100 piksel uzak olan iki x değeri bulma
                 x_values_sorted = np.sort(x_values)
                 x_diff = np.diff(x_values_sorted)
@@ -258,6 +276,60 @@ class ImageSaver(Node):
                         if adjusted_x > x1:
                             fallback_points.append((adjusted_x, y))
                             print(f"Fallback: y = {y}, min_x = {adjusted_x}, adjusted_x = {adjusted_x}")
+        if all_points and self.latest_pointcloud is not None:
+            try:
+                matched_points = []
+                pc_height = self.latest_pointcloud.height
+                pc_width = self.latest_pointcloud.width
+
+                # Get point cloud data as numpy array
+                pc_data = point_cloud2.read_points_numpy(self.latest_pointcloud)
+
+                # Reshape to height x width x fields
+                pc_data = pc_data.reshape((pc_height, pc_width, -1))
+
+                # Camera intrinsic parameters (adjust these to match your camera)
+                fx = 700.0  # Focal length in pixels (x)
+                fy = 700.0  # Focal length in pixels (y)
+                cx = 640.0   # Principal point (x)
+                cy = 360.0   # Principal point (y)
+
+                for (x_pixel, y_pixel) in all_points:
+                    # Convert from image coordinates to normalized device coordinates
+                    u = x_pixel
+                    v = y_pixel
+
+                    # Skip if coordinates are out of bounds
+                    if u < 0 or u >= pc_width or v < 0 or v >= pc_height:
+                        continue
+
+                    # Get corresponding 3D point
+                    point = pc_data[int(v), int(u)]
+                    x, y, z = point[:3]
+
+                    # Filter invalid points
+                    if not math.isnan(x) and not (math.isnan(y)) and not (math.isnan(z)):
+                        # Transform to world coordinates if needed
+                        # (This depends on your coordinate frames)
+                        matched_points.append((x, y, z))
+
+                if matched_points:
+                    # Create PointCloud2 message
+                    header = self.latest_pointcloud_header
+                    header.frame_id = "zed_camera_link"  # Publish in camera frame
+
+                    fields = [
+                        PointField(name='x', offset=0, datatype=PointField.FLOAT32, count=1),
+                        PointField(name='y', offset=4, datatype=PointField.FLOAT32, count=1),
+                        PointField(name='z', offset=8, datatype=PointField.FLOAT32, count=1),
+                    ]
+
+                    pc2_msg = point_cloud2.create_cloud(header, fields, matched_points)
+                    self.filtered_pointcloud_pub.publish(pc2_msg)
+                    self.get_logger().info(f"Published filtered PointCloud2 with {len(matched_points)} points")
+
+            except Exception as e:
+                self.get_logger().error(f"Error creating filtered PointCloud: {str(e)}")
 
         # Eğer mid_points boşsa, fallback_points'i kullan
         if not mid_points and fallback_points:

@@ -28,11 +28,8 @@ def generate_launch_description():
 
     # nav2_launch_file_dir ve rviz_config_dir yolları
     nav2_launch_file_dir = os.path.join(get_package_share_directory('nav2_bringup'), 'launch')
-    rviz_config_dir = os.path.join(
-        get_package_share_directory('nav2_bringup'),
-        'rviz',
-        'nav2_default_view.rviz'
-    )
+    rviz_config_dir = os.path.join(src_dir,"src","evata_sim","navigasyon","nav2_evata_view.rviz")
+
 
     return LaunchDescription([
         DeclareLaunchArgument(

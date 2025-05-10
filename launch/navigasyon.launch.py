@@ -7,6 +7,7 @@ from ament_index_python.packages import get_package_share_directory
 from launch.actions import DeclareLaunchArgument
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.actions import ExecuteProcess
 
 def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time', default='true')
@@ -104,5 +105,13 @@ def generate_launch_description():
             PythonLaunchDescriptionSource([launch_file_dir, '/navigation2.launch.py']),
             launch_arguments={'use_sim_time': use_sim_time}.items(),
         ),
+        
+        ExecuteProcess(
+            cmd=[
+        'python3',
+        os.path.join(src_dir, 'src', 'evata_sim', 'evata_sim', 'laneDetection.py')],
+            output='screen'
+        ),
     ])
+   
 
