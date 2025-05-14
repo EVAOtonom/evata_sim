@@ -20,7 +20,7 @@ def generate_launch_description():
     src_dir = dir_path.split('/install')[0]  # install kısmını çıkar
 
     # pist_world klasörüne ve pist.world dosyasına giden yolu oluştur
-    world_file = os.path.join(src_dir, 'src', 'evata_sim', 'navigasyon',"models","world", 'arabasız_pist.world')
+    world_file = os.path.join(src_dir, 'src', 'evata_sim', 'pist_world', 'pist.world')
 
     # IGN_GAZEBO_RESOURCE_PATH ayarını yap
     ign_resource_path = SetEnvironmentVariable(
@@ -46,8 +46,8 @@ def generate_launch_description():
             '-name', "Evata",
             '-file', os.path.join(src_dir, "src", "evata_sim", "pist_world", "models", "Evata", "model.sdf"),
             '-allow_renaming', 'true',
-            '-x', '0.0',
-            '-y', '0.0',
+            '-x', '32.6016',
+            '-y', '43.6005',
             '-z', '0.6'
         ],
     )
@@ -105,13 +105,7 @@ def generate_launch_description():
             PythonLaunchDescriptionSource([launch_file_dir, '/navigation2.launch.py']),
             launch_arguments={'use_sim_time': use_sim_time}.items(),
         ),
-        
-        ExecuteProcess(
-            cmd=[
-        'python3',
-        os.path.join(src_dir, 'src', 'evata_sim', 'evata_sim', 'laneDetection.py')],
-            output='screen'
-        ),
+
     ])
    
 
