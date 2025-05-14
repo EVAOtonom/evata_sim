@@ -30,25 +30,23 @@ def generate_launch_description():
         package='ros_gz_bridge',
         executable='parameter_bridge',
         arguments=[
-		'/cmd_vel@geometry_msgs/msg/Twist@ignition.msgs.Twist',
-		'/model/Evata/pose@tf2_msgs/msg/TFMessage@ignition.msgs.Pose_V',
-		'/clock@rosgraph_msgs/msg/Clock@ignition.msgs.Clock',
-		'/camera/rgb@sensor_msgs/msg/Image@ignition.msgs.Image',
-		'/lidar@sensor_msgs/msg/LaserScan@ignition.msgs.LaserScan',
-		'/odom@nav_msgs/msg/Odometry@ignition.msgs.Odometry',
-		'/imu@sensor_msgs/msg/Imu@ignition.msgs.IMU',
-		'/depth_camera/zed/image@sensor_msgs/msg/Image@ignition.msgs.Image',
-		'/depth_camera/zed/points@sensor_msgs/msg/PointCloud2@ignition.msgs.PointCloud',
-		'/depth_camera/zed/camera_info@sensor_msgs/msg/CameraInfo@ignition.msgs.CameraInfo',
-		'/depth_camera/zed/depth_image@sensor_msgs/msg/Image@ignition.msgs.Image',
-		'/depth_camera/zed/image@sensor_msgs/msg/Image@ignition.msgs.Image',
-		'/depth_camera/zed/points@sensor_msgs/msg/PointCloud2@ignition.msgs.PointCloudPacked'
-
-            
-            
+            '/cmd_vel@geometry_msgs/msg/Twist@ignition.msgs.Twist',
+            '/model/Evata/pose@tf2_msgs/msg/TFMessage@ignition.msgs.Pose_V',
+            '/clock@rosgraph_msgs/msg/Clock@ignition.msgs.Clock',
+            '/camera/rgb@sensor_msgs/msg/Image@ignition.msgs.Image',
+            '/lidar@sensor_msgs/msg/LaserScan@ignition.msgs.LaserScan',
+            '/odom@nav_msgs/msg/Odometry@ignition.msgs.Odometry',
+            '/imu@sensor_msgs/msg/Imu@ignition.msgs.IMU',
+            '/depth_camera/zed/image@sensor_msgs/msg/Image@ignition.msgs.Image',
+            '/depth_camera/zed/points@sensor_msgs/msg/PointCloud2@ignition.msgs.PointCloud',
+            '/depth_camera/zed/camera_info@sensor_msgs/msg/CameraInfo@ignition.msgs.CameraInfo',
+            '/depth_camera/zed/depth_image@sensor_msgs/msg/Image@ignition.msgs.Image',
+            '/depth_camera/zed/image@sensor_msgs/msg/Image@ignition.msgs.Image',
+            '/depth_camera/zed/points@sensor_msgs/msg/PointCloud2@ignition.msgs.PointCloudPacked'
         ],
         output='screen'
     )
+
     # Aracı spawnla
     ignition_spawn_entity = Node(
         package='ros_ign_gazebo',
@@ -67,5 +65,6 @@ def generate_launch_description():
 
     return LaunchDescription([
         gazebo,
-        bridge
+        bridge,
+        ignition_spawn_entity
     ])
