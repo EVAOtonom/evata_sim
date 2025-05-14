@@ -49,6 +49,21 @@ def generate_launch_description():
         ],
         output='screen'
     )
+    # Aracı spawnla
+    ignition_spawn_entity = Node(
+        package='ros_ign_gazebo',
+        executable='create',
+        output='screen',
+        arguments=[
+            '-entity', 'Evata',
+            '-name', 'Evata',
+            '-file', os.path.join(src_dir, 'src', 'evata_sim', 'pist_world', 'models', 'Evata', 'model.sdf'),
+            '-allow_renaming', 'true',
+            '-x', '32.6016',
+            '-y', '43.6005',
+            '-z', '0.5'
+        ]
+    )
 
     return LaunchDescription([
         gazebo,
