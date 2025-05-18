@@ -1,41 +1,86 @@
-import os
 import rclpy
 from rclpy.node import Node
+from rclpy.action import ActionClient
 from nav_msgs.msg import Odometry
 from sensor_msgs.msg import NavSatFix
 from std_msgs.msg import Float32
-import math
+from geometry_msgs.msg import PoseStamped
+from nav2_msgs.action import NavigateToPose
 from ament_index_python.packages import get_package_share_directory
 
-class GPSCorrector(Node):
+import math
+import os
+import time
+
+class GPSNavigator(Node):
     def __init__(self):
-        super().__init__('gps_from_map')
-        self.subscription = self.create_subscription(Odometry, '/odom', self.callback, 10)
-        self.publisher = self.create_publisher(NavSatFix, '/gps_corrected', 10)
+        super().__init__('gps_navigator')
+
+        # === Harita verisini yükle ===
+        package_path = get_package_share_directory('evata_sim')
+        self.gps_map_file = os.path.join(package_path, 'gps_data', 'gps_map.txt')
+        self.gps_map = self.load_gps_map(self.gps_map_file)
+
+        # === GPS hedefleri ===
+        self.gps_targets = [
+            (40.789941,29.509221),
+            (40.789937, 29.509312)
+        ]
+        self.current_index = 0
+
+        # === Publisher ve Subscriber ===
+        self.create_subscription(Odometry, '/odom', self.odom_callback, 10)
+        self.gps_pub = self.create_publisher(NavSatFix, '/gps_corrected', 10)
         self.heading_pub = self.create_publisher(Float32, '/gps/heading', 10)
-        self.ref_points = self.load_map()
+        self.create_timer(0.5, self.publish_direction)
+
+        # === Action Client ===
+        self._client = ActionClient(self, NavigateToPose, 'navigate_to_pose')
+        self._client.wait_for_server()
+
+        # === State Variables ===
         self.prev_x = None
         self.prev_y = None
+        self.prev_pose = None
+        self.current_pose = None
 
-    def load_map(self):
-        package_path = get_package_share_directory('evata_sim')
-        path = os.path.join(package_path, 'gps_data', 'gps_map.txt')
-        path = os.path.abspath(path)
-        ref_points = []
+        # Başla
+        self.send_next_goal()
+
+    def load_gps_map(self, path):
+        gps_points = []
         with open(path, 'r') as f:
             for line in f:
                 if line.strip().startswith("#") or len(line.strip()) == 0:
                     continue
-                x, y, lat, lon = line.strip().split()
-                ref_points.append((float(x), float(y), float(lat), float(lon)))
-        return ref_points
+                x, y, lat, lon = map(float, line.strip().split())
+                gps_points.append((x, y, lat, lon))
+        return gps_points
 
-    def callback(self, msg):
-        x = msg.pose.pose.position.x
-        y = msg.pose.pose.position.y
+    def gps_to_xy(self, lat, lon):
+        nearest_points = sorted(
+            self.gps_map,
+            key=lambda p: (p[2] - lat)**2 + (p[3] - lon)**2
+        )[:3]
 
-        # GPS düzeltme
-        nearest = sorted(self.ref_points, key=lambda p: (p[0]-x)**2 + (p[1]-y)**2)[:3]
+        total_weight = 0.0
+        x_sum = 0.0
+        y_sum = 0.0
+
+        for x, y, plat, plon in nearest_points:
+            dist = math.sqrt((plat - lat)**2 + (plon - lon)**2) + 1e-6
+            weight = 1.0 / dist
+            total_weight += weight
+            x_sum += x * weight
+            y_sum += y * weight
+
+        avg_x = x_sum / total_weight
+        avg_y = y_sum / total_weight
+
+        return avg_x, avg_y
+
+    def xy_to_gps(self, x, y):
+        nearest = sorted(self.gps_map, key=lambda p: (p[0]-x)**2 + (p[1]-y)**2)[:3]
         total_weight = 0.0
         lat_sum = 0.0
         lon_sum = 0.0
@@ -47,17 +92,27 @@ class GPSCorrector(Node):
             lon_sum += plon * weight
         avg_lat = lat_sum / total_weight
         avg_lon = lon_sum / total_weight
+        return avg_lat, avg_lon
 
-        # Yayınla: düzeltilmiş GPS
-        msg_out = NavSatFix()
-        msg_out.header.stamp = self.get_clock().now().to_msg()
-        msg_out.header.frame_id = "gps_corrected"
-        msg_out.latitude = avg_lat
-        msg_out.longitude = avg_lon
-        msg_out.altitude = 0.0
-        self.publisher.publish(msg_out)
+    def odom_callback(self, msg):
+        x = msg.pose.pose.position.x
+        y = msg.pose.pose.position.y
 
-        # Heading hesabı (araç hareket yönü)
+        # GPS düzeltme
+        corrected_lat, corrected_lon = self.xy_to_gps(x, y)
+
+        # NavSatFix mesajı yayınla
+        gps_msg = NavSatFix()
+        gps_msg.header.stamp = self.get_clock().now().to_msg()
+        gps_msg.header.frame_id = "gps_corrected"
+        gps_msg.latitude = corrected_lat
+        gps_msg.longitude = corrected_lon
+        gps_msg.altitude = 0.0
+        self.gps_pub.publish(gps_msg)
+
+        self.get_logger().info(f"Corrected GPS: lat={corrected_lat:.7f}, lon={corrected_lon:.7f}")
+
+        # Heading hesapla
         if self.prev_x is not None and self.prev_y is not None:
             dx = x - self.prev_x
             dy = y - self.prev_y
@@ -65,20 +120,93 @@ class GPSCorrector(Node):
                 heading_rad = math.atan2(dy, dx)
                 self.last_heading = (math.degrees(heading_rad) + 360.0) % 360.0
 
-        # Her zaman yayınla (son heading varsa)
         if hasattr(self, 'last_heading'):
             self.heading_pub.publish(Float32(data=self.last_heading))
-            self.get_logger().info(f"Heading: {self.last_heading:.2f}°")
-
 
         self.prev_x = x
         self.prev_y = y
 
-        self.get_logger().info(f"Corrected GPS: lat={avg_lat:.7f}, lon={avg_lon:.7f}")
+        # Yön tayini için pose kaydet
+        self.prev_pose = self.current_pose
+        self.current_pose = msg.pose.pose
+
+    def publish_direction(self):
+        if self.prev_pose is None or self.current_pose is None:
+            return
+
+        dx = self.current_pose.position.x - self.prev_pose.position.x
+        dy = self.current_pose.position.y - self.prev_pose.position.y
+
+        if abs(dx) < 1e-4 and abs(dy) < 1e-4:
+            return  # çok küçük hareket
+
+        angle = math.atan2(dy, dx)
+        angle_deg = (math.degrees(angle) + 360) % 360
+
+        if 337.5 <= angle_deg or angle_deg < 22.5:
+            direction = "➡️ Doğu"
+        elif 22.5 <= angle_deg < 67.5:
+            direction = "↗️ Kuzeydoğu"
+        elif 67.5 <= angle_deg < 112.5:
+            direction = "⬆️ Kuzey"
+        elif 112.5 <= angle_deg < 157.5:
+            direction = "↖️ Kuzeybatı"
+        elif 157.5 <= angle_deg < 202.5:
+            direction = "⬅️ Batı"
+        elif 202.5 <= angle_deg < 247.5:
+            direction = "↙️ Güneybatı"
+        elif 247.5 <= angle_deg < 292.5:
+            direction = "⬇️ Güney"
+        elif 292.5 <= angle_deg < 337.5:
+            direction = "↘️ Güneydoğu"
+        else:
+            direction = "❓"
+
+        self.get_logger().info(f"🧭 Anlık yön: {direction} ({angle_deg:.1f}°)")
+
+    def send_next_goal(self):
+        if self.current_index >= len(self.gps_targets):
+            self.get_logger().info('🎉 Tüm GPS hedeflerine ulaşıldı.')
+            return
+
+        lat, lon = self.gps_targets[self.current_index]
+        x, y = self.gps_to_xy(lat, lon)
+
+        goal_msg = NavigateToPose.Goal()
+        goal_msg.pose.header.frame_id = 'map'
+        goal_msg.pose.header.stamp = self.get_clock().now().to_msg()
+        goal_msg.pose.pose.position.x = x
+        goal_msg.pose.pose.position.y = y
+        goal_msg.pose.pose.orientation.w = 1.0
+
+        self.get_logger().info(f'{self.current_index + 1}. hedef → GPS ({lat}, {lon}) → XY ({x:.2f}, {y:.2f})')
+
+        send_goal_future = self._client.send_goal_async(goal_msg)
+        send_goal_future.add_done_callback(self.goal_response_callback)
+
+    def goal_response_callback(self, future):
+        goal_handle = future.result()
+        if not goal_handle.accepted:
+            self.get_logger().warn('❌ Hedef reddedildi!')
+            time.sleep(1.0)
+            self.current_index += 1
+            self.send_next_goal()
+            return
+
+        self.get_logger().info('✅ Hedef kabul edildi. Bekleniyor...')
+        result_future = goal_handle.get_result_async()
+        result_future.add_done_callback(self.result_callback)
+
+    def result_callback(self, future):
+        self.get_logger().info('✅ Hedefe ulaşıldı.')
+        time.sleep(1.0)
+        self.current_index += 1
+        self.send_next_goal()
+
 
 def main(args=None):
     rclpy.init(args=args)
-    node = GPSCorrector()
+    node = GPSNavigator()
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()
