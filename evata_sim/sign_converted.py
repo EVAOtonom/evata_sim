@@ -11,6 +11,7 @@ import numpy as np
 from ultralytics import YOLO
 import logging
 from sensor_msgs_py import point_cloud2
+from std_msgs.msg import String
 import math
 
 logging.getLogger('ultralytics').setLevel(logging.ERROR)
@@ -44,6 +45,10 @@ class SignDetector(Node):
         self.create_subscription(CameraInfo, "/depth_camera/zed/camera_info", self.camera_info_callback, 10)
         self.create_subscription(PointCloud2, "/depth_camera/zed/points", self.point_cloud_callback, 10)
 
+        # publisher
+        self.sign_pub = self.create_publisher(String, '/detected_signs', 10)
+
+
     def camera_info_callback(self, msg):
         self.fx = msg.k[0]
 
@@ -66,6 +71,15 @@ class SignDetector(Node):
                         detected_signs[class_name] = (x1, y1, x2, y2, 0)
 
             updated_tracked_signs = {}
+
+            for class_name, (x1, y1, x2, y2, _) in self.tracked_signs.items():
+                distance = self.calculate_best_distance(x1, y1, x2, y2, class_name)
+                self._draw_box(x1, y1, x2, y2, class_name, distance)
+                
+                msg = String()
+                msg.data = f"{class_name}: {distance:.2f}m"
+                self.sign_pub.publish(msg)
+                print(f"Tabela: {class_name}, Mesafe: {distance:.2f} m")
 
             for class_name, (x1, y1, x2, y2, frame_count) in self.tracked_signs.items():
                 if class_name in detected_signs:
