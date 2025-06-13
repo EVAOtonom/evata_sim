@@ -14,6 +14,7 @@ import time
 from tf_transformations import euler_from_quaternion
 from ament_index_python.packages import get_package_share_directory
 import numpy as np
+import json
 
 class ControlNode(Node):
     def __init__(self):
@@ -28,11 +29,11 @@ class ControlNode(Node):
         self.distance_threshold = 2.0
         self.saved_goal = None
         self.motion_enabled = True
-        self.last_cmd_vel = Twist()  # Son hız komutunu saklamak için
+        self.last_cmd_vel = Twist()
         self.original_goal = None
 
 
-        self.create_subscription(String, 'keyboard_cmd', self.keyboard_callback, 10)
+        self.create_subscription(String, '/detected_signs', self.sign_callback, 10)
         self.create_subscription(Odometry, '/odom', self.odom_callback, 10)
         self.vel_sub = self.create_subscription(Twist, '/cmd_vel', self.vel_callback, 10)
         self.vel_pub = self.create_publisher(Twist, '/cmd_vel', 10)
@@ -238,7 +239,7 @@ class ControlNode(Node):
                     send_goal_future.add_done_callback(self.goal_response_callback)
                     self.original_goal = None
                 else:
-                    self.get_logger().info("ℹ️ Orijinal hedef bulunamadı, live_gps'e devam ediliyor...")
+                    self.get_logger().info("ℹ️ live_gps'e devam ediliyor...")
                     self.command_pub.publish(String(data='green'))
                 
                 self.mode = 'normal'
@@ -311,81 +312,40 @@ class ControlNode(Node):
         ])
         self.current_yaw = yaw
 
-    def keyboard_callback(self, msg):
-        if msg.data == 'sag' and self.current_pose and self.mode == 'normal':
-            self.get_logger().info("🔀 'sag' alındı: En yakın (sağ) waypoint'e gidiliyor.")
-            self.command_pub.publish(String(data='red'))
-            time.sleep(0.2)
-            self.mode = 'waypoint'
-            self.send_nearest_right_waypoint()
-        elif msg.data == 'ilerisag' and self.current_pose and self.mode == 'normal':
-            self.get_logger().info("🔀 'sag' alındı: Ileri (sag) waypoint'e gidiliyor.")
-            self.command_pub.publish(String(data='red'))
-            time.sleep(0.2)
-            self.mode = 'waypoint'
-            self.send_nearest_right_waypoint()
-        elif msg.data == 'sol' and self.current_pose and self.mode == 'normal':
-            self.get_logger().info("🔀 'sol' alındı: En yakın (sol) waypoint'e gidiliyor.")
-            self.command_pub.publish(String(data='red'))
-            time.sleep(0.2)
-            self.mode = 'waypoint'
-            self.send_nearest_left_waypoint()
-        elif msg.data == 'ilerisol' and self.current_pose and self.mode == 'normal':
-            self.get_logger().info("🔀 'sol' alındı: Ileri (sol) waypoint'e gidiliyor.")
-            self.command_pub.publish(String(data='red'))
-            time.sleep(0.2)
-            self.mode = 'waypoint'
-            self.send_nearest_left_waypoint()
-        elif msg.data == 'girme' and self.current_pose and self.mode == 'normal':
-            self.get_logger().info("🔀 'girme' alındı: En yakın waypoint'e gidiliyor.")
-            self.command_pub.publish(String(data='red'))
-            time.sleep(0.2)
-            self.mode = 'waypoint'
-            self.send_nearest_noentry_waypoint()
-        elif msg.data == 'kazi' and self.current_pose and self.mode == 'normal':
-            self.get_logger().info("🔀 'kazi' alındı: En yakın waypoint'e gidiliyor.")
-            self.command_pub.publish(String(data='red'))
-            time.sleep(0.2)
-            self.mode = 'waypoint'
-            self.send_nearest_noentry_waypoint()
-        elif msg.data == 'notraffic' and self.current_pose and self.mode == 'normal':
-            self.get_logger().info("🔀 'notraffic' alındı: En yakın waypoint'e gidiliyor.")
-            self.command_pub.publish(String(data='red'))
-            time.sleep(0.2)
-            self.mode = 'waypoint'
-            self.send_nearest_noentry_waypoint()
+    def sign_callback(self, msg):
+        try:
+            data = json.loads(msg.data)
 
-        elif msg.data == 'red':
-            self.motion_enabled = False
-            self.get_logger().info("🛑 Hareket durduruldu (hedef iptal edilmedi)")
-            stop_msg = Twist()
-            self.vel_pub.publish(stop_msg)
+            if self.current_pose and self.mode == 'normal':    
+                if 'sag' in data:
+                    self.get_logger().info("🛑 'sag' levhası algılandı.")
+                    self.command_pub.publish(String(data='red'))
+                    time.sleep(0.2)
+                    self.mode = 'waypoint'
+                    self.send_nearest_right_waypoint()
+                elif 'soladonus' in data:
+                    self.get_logger().info("🛑 'sol' levhası algılandı.")
+                    self.command_pub.publish(String(data='red'))
+                    time.sleep(0.2)
+                    self.mode = 'waypoint'
+                    self.send_nearest_left_waypoint()
+                elif 'girme' in data or 'kazi' in data or 'notraffic' in data:
+                    self.get_logger().info("🛑 Girilmez türü levha algılandı.")
+                    self.command_pub.publish(String(data='red'))
+                    time.sleep(0.2)
+                    self.mode = 'waypoint'
+                    self.send_nearest_noentry_waypoint()
+                elif 'sagdonusyok' in data or 'soladonulmez' in data or 'ilerivesag' in data or 'ilerivesol' in data:
+                    self.get_logger().info("➡️ Düz git levhası algılandı, 10 metre ilerleniyor.")
+                    self.command_pub.publish(String(data='red'))
+                    time.sleep(0.2)
+                    self.mode = 'forward'
+                    if self.active_goal_handle:
+                        self.original_goal = self.active_goal_handle.goal
+                    self.go_forward_and_return()
 
-        elif msg.data == 'green':
-            self.motion_enabled = True
-            self.get_logger().info("✅ Hareket başlatıldı")
-            # Son hız komutunu tekrar gönder
-            self.vel_pub.publish(self.last_cmd_vel)
-
-        elif msg.data == 'dur':
-            self.motion_enabled = False
-            self.get_logger().info("🛑 Hareket durduruldu (hedef iptal edilmedi)")
-            stop_msg = Twist()
-            self.vel_pub.publish(stop_msg)
-        
-        elif msg.data == 'sagdonusyok' and self.current_pose and self.mode == 'normal':
-            self.get_logger().info("🔀 'sagdonusyok' alındı: 10 metre düz ilerleyecek.")
-            self.command_pub.publish(String(data='red'))
-            time.sleep(0.2)
-            self.mode = 'forward'
-            self.go_forward_and_return()
-            
-        elif msg.data == 'soldonusyok' and self.current_pose and self.mode == 'normal':
-            self.get_logger().info("🔀 'soldonusyok' alındı: 10 metre düz ilerleyecek.")
-            self.command_pub.publish(String(data='red'))
-            time.sleep(0.2)
-            self.mode = 'forward'
-            self.go_forward_and_return()
+        except Exception as e:
+            self.get_logger().error(f"❌ JSON parse hatası: {e}")
 
 
 def main(args=None):
