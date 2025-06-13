@@ -12,10 +12,11 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
-        # Launch dosyalarını ekliyoruz
+        # Launch dosyalarını ve txt yollarını ekliyoruz
         (os.path.join('share', package_name, 'launch'), glob('launch/*.py')),
         (os.path.join('share', package_name, 'gps_data'), ['evata_sim/gps_map.txt']),
-        (os.path.join('share', package_name, 'model'), ['evata_sim/sol300best.pt']),  
+        (os.path.join('share', package_name, 'model'), ['evata_sim/sol300best.pt']),
+        (os.path.join('share', package_name, 'model'), ['evata_sim/best.pt']),    
         (os.path.join('share', package_name, 'waypoint'), ['evata_sim/waypoint.txt']),
     ],
     install_requires=['setuptools'],
@@ -36,7 +37,8 @@ setup(
             "laneDetection=" + package_name + ".laneDetection:main",
             "sign_converted=" + package_name + ".sign_converted:main",
             "live_gps=" + package_name + ".live_gps:main",
-            "new_control=" + package_name + ".new_control:main"
+            "new_control=" + package_name + ".new_control:main",
+            "keyboard_publisher=" + package_name + ".keyboard_publisher:main"
         ],
     },
 )

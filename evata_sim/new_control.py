@@ -1,3 +1,4 @@
+import os
 import rclpy
 from rclpy.node import Node
 from std_msgs.msg import String
@@ -11,14 +12,16 @@ from sensor_msgs.msg import Imu
 import math
 import time
 from tf_transformations import euler_from_quaternion
+from ament_index_python.packages import get_package_share_directory
 import numpy as np
-
 
 class ControlNode(Node):
     def __init__(self):
         super().__init__('new_control')
 
-        self.waypoints = self.load_waypoints('/home/ubuntu/ros2_ws/src/evata_sim/evata_sim/waypoint.txt')
+        package_path = get_package_share_directory('evata_sim')
+        waypoint_path = os.path.join(package_path, 'waypoint', 'waypoint.txt')
+        self.waypoints = self.load_waypoints(waypoint_path)
         self.current_pose = None
         self.current_yaw = 0.0
         self.mode = 'normal'
