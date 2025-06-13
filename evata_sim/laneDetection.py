@@ -3,6 +3,7 @@ from rclpy.node import Node
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import cv2
+import cv2.ximgproc
 from geometry_msgs.msg import Twist  # Twist mesajı için import
 from sensor_msgs.msg import PointCloud2, PointField
 from sensor_msgs_py import point_cloud2
@@ -180,11 +181,18 @@ class ImageSaver(Node):
 
         da_seg_mask = driving_area_mask(seg)
         ll_seg_mask = lane_line_mask(ll)
+        
+        ll_seg_mask_for_thinning_uint8 = (ll_seg_mask.astype(np.uint8) * 255)
+        
+        thinned_ll_mask_255 = cv2.ximgproc.thinning(ll_seg_mask_for_thinning_uint8, thinningType=cv2.ximgproc.THINNING_ZHANGSUEN)
+        
+        thinned_ll_mask_for_show = (thinned_ll_mask_255 / 255).astype(ll_seg_mask.dtype)
+        
         # Kameranın orta noktasını belirleme
         mid_point = im0s.shape[1] // 2
 
         # Şerit çizgilerinin koordinatlarını bulma
-        y_coords, x_coords = np.where(ll_seg_mask == 1)
+        y_coords, x_coords = np.where(thinned_ll_mask_for_show == 1)
 
         # Sol ve sağ şerit çizgilerini ayırma
         sol_mask = x_coords < mid_point
@@ -367,7 +375,7 @@ class ImageSaver(Node):
                 for *xyxy, conf, cls in reversed(det):
                     plot_one_box(xyxy, im0s, line_thickness=3)
             # Show result
-            show_seg_result(im0s, (da_seg_mask, ll_seg_mask), is_demo=True)
+            show_seg_result(im0s, (da_seg_mask, thinned_ll_mask_for_show), is_demo=True)
             cv2.putText(im0s, f"Serit = {self.serit}", (10,30), cv2.FONT_HERSHEY_SIMPLEX,
                         1, (0,255,0), 2, cv2.LINE_AA)
             if len(mid_points) >= 2:
