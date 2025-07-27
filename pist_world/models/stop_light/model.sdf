@@ -81,11 +81,10 @@
           </script>
           <ambient>0 1 0 1</ambient>
           <specular>0 1 0 1</specular>
-          <!--emissive>0 1 0 1</emissive-->
+          <emissive>0 1 0 1</emissive>
         </material>
       </visual>
+
     </link>
-        <plugin name="traffic_light_plugin" filename="/home/akif/ros2_ws/install/traffic_light_plugin/lib/libtraffic_light_plugin.so">
-    </plugin>
   </model>
 </sdf>

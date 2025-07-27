@@ -48,7 +48,10 @@ def generate_launch_description():
             '-allow_renaming', 'true',
             '-x', '32.6016',
             '-y', '43.6005',
-            '-z', '0.6'
+            '-z', '0.6',
+            '-R', '0.0',  # Roll (raw) - 0
+            '-P', '0.0',  # Pitch - 0
+            '-Y', '3.1416'   # Yaw - 0
         ],
     )
 
@@ -71,12 +74,16 @@ def generate_launch_description():
         ignition_spawn_world,
         
         # Ign Gazebo Launch
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                os.path.join(get_package_share_directory('ros_ign_gazebo'), 'launch', 'ign_gazebo.launch.py')
-            ),
-            launch_arguments=[('gz_args', ['-r -v 3 ' + world_file])],
-        ),
+IncludeLaunchDescription(
+    PythonLaunchDescriptionSource(
+        os.path.join(get_package_share_directory('ros_ign_gazebo'), 'launch', 'ign_gazebo.launch.py')
+    ),
+    launch_arguments={
+        'gz_args': '-r -v 3 ' + world_file,
+        'use_sim_time': 'true'
+    }.items(),
+),
+
 
         # Parametreler
         DeclareLaunchArgument(

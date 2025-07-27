@@ -197,7 +197,7 @@
 
 		<model name="girilmez">
 			<static>true</static>
-			<pose>-31.8019 31.8937 0 0 0 3.1256</pose> <!-- Konumu değiştirebilirsin -->
+			<pose>2.6863 -22.0557 0 0 0 -1.672</pose> <!-- Konumu değiştirebilirsin -->
 			<link name="link6">
 				<visual name="visual">
 					<geometry>
@@ -257,7 +257,7 @@
 
 		<model name="ileri_sol">
 			<static>true</static>
-			<pose>-16.0518 40.5145 0 0 0 1.5295</pose> <!-- Konumu değiştirebilirsin -->
+			<pose>3.6488 40.7530 0 0 0 1.5295</pose> 
 			<link name="link10">
 				<visual name="visual">
 					<geometry>
@@ -464,8 +464,8 @@
 
 		<model name="sola_donus_yasak">
 			<static>true</static>
-			<pose>3.9118 40.5735 0 0 0 1.5295</pose> <!-- Konumu değiştirebilirsin -->
-			<link name="link18">
+			<pose>25.9380 41.7933 0 0 0 1.5829</pose> <!-- Konumu değiştirebilirsin -->
+			<link name="link33">
 				<visual name="visual">
 					<geometry>
 						<mesh>
@@ -604,7 +604,7 @@
 
 		<model name="koni">
 			<static>true</static>
-			<pose>13.6057 46.748 0 0 0 0</pose> <!-- Konumu değiştirebilirsin -->
+			<pose>-23.3513 40.3702 0 0 0 0</pose> <!-- Konumu değiştirebilirsin -->
 			<link name="link22">
 				<visual name="visual">
 					<geometry>
@@ -617,6 +617,95 @@
 			</link>
 		</model>
 
+		<model name="koni1">
+			<static>true</static>
+			<pose>-22.5111 40.3702 0 0 0 0</pose> <!-- Konumu değiştirebilirsin -->
+			<link name="link22">
+				<visual name="visual">
+					<geometry>
+						<mesh>
+							<uri>model://dekorasyon/koni/koni.dae</uri>
+							<scale>1 1 1</scale>
+						</mesh>
+					</geometry>
+				</visual>
+			</link>
+		</model>
+
+		<model name="koni2">
+			<static>true</static>
+			<pose>-21.6394 40.3702 0 0 0 0</pose> <!-- Konumu değiştirebilirsin -->
+			<link name="link22">
+				<visual name="visual">
+					<geometry>
+						<mesh>
+							<uri>model://dekorasyon/koni/koni.dae</uri>
+							<scale>1 1 1</scale>
+						</mesh>
+					</geometry>
+				</visual>
+			</link>
+		</model>
+
+		<model name="koni3">
+			<static>true</static>
+			<pose>-20.7394 40.3702 0 0 0 0</pose> <!-- Konumu değiştirebilirsin -->
+			<link name="link22">
+				<visual name="visual">
+					<geometry>
+						<mesh>
+							<uri>model://dekorasyon/koni/koni.dae</uri>
+							<scale>1 1 1</scale>
+						</mesh>
+					</geometry>
+				</visual>
+			</link>
+		</model>
+
+		<model name="koni4">
+			<static>true</static>
+			<pose>-19.5111 40.3702 0 0 0 0</pose> <!-- Konumu değiştirebilirsin -->
+			<link name="link22">
+				<visual name="visual">
+					<geometry>
+						<mesh>
+							<uri>model://dekorasyon/koni/koni.dae</uri>
+							<scale>1 1 1</scale>
+						</mesh>
+					</geometry>
+				</visual>
+			</link>
+		</model>
+
+		<model name="koni5">
+			<static>true</static>
+			<pose>-18.6394 40.3702 0 0 0 0</pose> <!-- Konumu değiştirebilirsin -->
+			<link name="link22">
+				<visual name="visual">
+					<geometry>
+						<mesh>
+							<uri>model://dekorasyon/koni/koni.dae</uri>
+							<scale>1 1 1</scale>
+						</mesh>
+					</geometry>
+				</visual>
+			</link>
+		</model>
+
+		<model name="koni6">
+			<static>true</static>
+			<pose>-17.7394 40.3702 0 0 0 0</pose> <!-- Konumu değiştirebilirsin -->
+			<link name="link22">
+				<visual name="visual">
+					<geometry>
+						<mesh>
+							<uri>model://dekorasyon/koni/koni.dae</uri>
+							<scale>1 1 1</scale>
+						</mesh>
+					</geometry>
+				</visual>
+			</link>
+		</model>
 
 		<model name="bariyerTamamlanmış">
 			<static>true</static>

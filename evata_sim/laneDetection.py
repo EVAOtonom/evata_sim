@@ -4,9 +4,10 @@ from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import cv2
 import cv2.ximgproc
-from geometry_msgs.msg import Twist  # Twist mesajı için import
 from sensor_msgs.msg import PointCloud2, PointField
 from sensor_msgs_py import point_cloud2
+from std_msgs.msg import String
+import json
 import math
 import os
 import numpy as np
@@ -61,7 +62,6 @@ class ImageSaver(Node):
             self.image_callback,
             10)
         self.create_subscription(PointCloud2, "/depth_camera/zed/points", self.point_cloud_callback, 10)
-
         self.bridge = CvBridge()
         dir_path = os.path.dirname(os.path.realpath(__file__))
         src_dir = dir_path.split('/install')[0]  # install kısmını çıkar
@@ -72,25 +72,27 @@ class ImageSaver(Node):
         half = device.type != 'cpu'  # half precision only supported on CUDA
         model = model.to(device)
         self.latest_pointcloud = None
+        self.create_subscription(String, '/gps_cmd', self.gps_command_callback, 10)
+        self.pause_lane = False
 
         if half:
             model.half()  # to FP16  
         model.eval()
         self.model = model
         self.device = device
-        self.sol_sayac = 0
-        self.sag_sayac = 0
-        self.onceki_deger = None
-        self.serit = None
-
-        self.cmd_vel_publisher = self.create_publisher(Twist, '/cmd_vel', 10)
         self.filtered_pointcloud_pub = self.create_publisher(PointCloud2, '/lane_pointcloud', 10)
-
         self.image_center_x = 640  # Görselin orta noktası (1280x720 için)
+        self.create_subscription(String, "/detected_signs", self.sign_callback, 10)
+        self.durak_var = False
+        self.durak_timeout = 30.0  # tabelayı görmemeye başladıktan sonra kaç saniye daha verilerin yayınlanmaması falan fistan ne uzun uzun yazdım aq anla işte
+        self.last_durak_seen_time = 0.0
 
 
-    def calculate_steering_angle(self, mid_points):
-        """Orta noktaların x koordinatlarının ortalamasına göre dönme açısını hesapla."""
+        self.last_process_time = 0.0
+        self.process_interval = 1.0 / 30  # 5 FPS
+
+    """def calculate_steering_angle(self, mid_points):
+        "Orta noktaların x koordinatlarının ortalamasına göre dönme açısını hesapla."
         if not mid_points:
             return 0.0  # Orta nokta yoksa düz git
 
@@ -107,41 +109,56 @@ class ImageSaver(Node):
         max_deviation = self.image_center_x  # Maksimum sapma (640 piksel)
         steering_angle = deviation / max_deviation  # -1.0 (sola) ile 1.0 (sağa) arasında
 
-        return -steering_angle
-
-    def publish_cmd_vel(self, steering_angle):
-        """Tekerlek açısına göre Twist mesajı gönder."""
-        msg = Twist()
-
-        # İleri hareket için hız değerlerini ayarlayın
-        msg.linear.x = 0.5 # İleri hareket
-        msg.linear.y = 0.0  # Y ekseninde hareket yok
-        msg.linear.z = 0.0  # Z ekseninde hareket yok
-
-        # Dönme hareketi için hız değerlerini ayarlayın
-        msg.angular.x = 0.0  # Dönme hareketi yok
-        msg.angular.y = 0.0  # Dönme hareketi yok
-        msg.angular.z = steering_angle  # Hesaplanan dönme açısı
-
-        #self.cmd_vel_publisher.publish(msg)
-        #self.get_logger().info(f"Publishing: linear.x={msg.linear.x}, angular.z={msg.angular.z}")
+        return -steering_angle"""
+    def gps_command_callback(self, msg):
+        if msg.data == "pause_lane_detection":
+            self.pause_lane = True
+            self.get_logger().info("GPS tarafından yayını durdurma komutu alındı.")
 
     def image_callback(self, msg):
+        current_time = time.time()
+        if current_time - self.last_process_time < self.process_interval:
+            return  # Henüz işleme zamanı değil, fonksiyondan çık
+
+        self.last_process_time = current_time
+        
         try:
-            self.latest_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
+            self.latest_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='passthrough')
+            self.latest_image = cv2.cvtColor(self.latest_image, cv2.COLOR_RGB2BGR)
             self.detect(self.latest_image)
         except Exception as e:
             self.get_logger().error(f'Failed to process image: {e}')
-    
+
+        
     def point_cloud_callback(self, msg):
         self.latest_pointcloud = msg
         # Store camera info if available (you might need to subscribe to camera info topic)
         if hasattr(msg, 'header'):
             self.latest_pointcloud_header = msg.header
 
+    def sign_callback(self, msg):
+        try:
+            data = json.loads(msg.data)
+            self.get_logger().info(f"Levha Mesajı Alındı: {data}")
+
+            if "durak" in data:
+                self.durak_var = True
+                self.last_durak_seen_time = time.time()
+                self.get_logger().info("Durak algılandı!")
+        except Exception as e:
+            self.get_logger().warn(f"Levha mesajı ayrıştırılamadı: {e}")
+
+
 
     def detect(self, source, imgsz=640, conf_thres=0.3, iou_thres=0.45, 
                device='0', classes=None, agnostic_nms=False,):
+        # Durak zaman aşımı kontrolü
+        if self.pause_lane:
+            return
+        if self.durak_var and (time.time() - self.last_durak_seen_time > self.durak_timeout):
+            self.durak_var = False
+            self.get_logger().info("Durak süresi doldu, sıfırlandı.")
+
         stride = 32
         model = self.model
         device = self.device
@@ -194,55 +211,20 @@ class ImageSaver(Node):
         # Şerit çizgilerinin koordinatlarını bulma
         y_coords, x_coords = np.where(thinned_ll_mask_for_show == 1)
 
-        # Sol ve sağ şerit çizgilerini ayırma
-        sol_mask = x_coords < mid_point
-        sag_mask = x_coords >= mid_point
+        roi_y_start=485    
+        roi_y_end= 720
 
-        sol = list(zip(y_coords[sol_mask], x_coords[sol_mask]))
-        sag = list(zip(y_coords[sag_mask], x_coords[sag_mask]))
-
+        sol_ust=305
+        sag_ust=920	
+        sol_alt=55
+        sag_alt=1190
         
-
-        # Hangi tarafta daha fazla nokta olduğunu belirle
-        if len(sol) < len(sag):
-            mevcut_deger = 0
-        elif len(sag) < len(sol):
-            mevcut_deger = 1
-        else:
-            mevcut_deger = None  # Eşitse veya hiç nokta yoksa
-
-        # Önceki değerle karşılaştır
-        if mevcut_deger == self.onceki_deger:
-            if mevcut_deger == 0:
-                self.sol_sayac += 1
-            elif mevcut_deger == 1:
-                self.sag_sayac += 1
-        else:
-            # Değer değişti, sayaçları sıfırla
-            print("else girdi")
-            self.sol_sayac = 0
-            self.sag_sayac = 0
-            self.onceki_deger = mevcut_deger
-
-
-        # Eğer 100 kere üst üste aynı değer gelirse ekrana yazdır
-        if self.sol_sayac >= 100:
-            self.serit = "sol"
-            self.sol_sayac = 0  # Sayaçı sıfırla (isteğe bağlı)
-            print("sol")
-        elif self.sag_sayac >= 50:
-            self.serit = "sag"
-            self.sag_sayac = 0  # Sayaçı sıfırla (isteğe bağlı)
-            print("sağ")
-
-        roi_y_start = 520
-        roi_y_end = 720
         def get_roi_x_bounds(y):
             if y < roi_y_start or y > roi_y_end:
                 return None, None
             # Lineer interpolasyon ile x1 ve x2 değerlerini hesapla
-            x1 = int(430 + (y - roi_y_start) * (200 - 430) / (roi_y_end - roi_y_start))
-            x2 = int(870 + (y - roi_y_start) * (1100 - 870) / (roi_y_end - roi_y_start))
+            x1 = int(sol_ust + (y - roi_y_start) * (sol_alt - sol_ust) / (roi_y_end - roi_y_start))
+            x2 = int(sag_ust + (y - roi_y_start) * (sag_alt - sag_ust) / (roi_y_end - roi_y_start))
             return x1, x2
 
         roi_mask = (y_coords >= roi_y_start) & (y_coords <= roi_y_end)
@@ -275,7 +257,7 @@ class ImageSaver(Node):
                     x2_pair = x_values_sorted[valid_pairs[0] + 1]
                     mid_x = (x1_pair + x2_pair) // 2
                     mid_points.append((mid_x, y))  # Orta noktayı listeye ekle
-                    print(f"y = {y}, x1 = {x1_pair}, x2 = {x2_pair}, Orta Nokta = ({mid_x}, {y})")
+                    #print(f"y = {y}, x1 = {x1_pair}, x2 = {x2_pair}, Orta Nokta = ({mid_x}, {y})")
                 else:
                     for x in x_values:
                         adjusted_x = x - 275
@@ -283,7 +265,7 @@ class ImageSaver(Node):
                         adjusted_x = max(x1, min(x2, adjusted_x))
                         if adjusted_x > x1:
                             fallback_points.append((adjusted_x, y))
-                            print(f"Fallback: y = {y}, min_x = {adjusted_x}, adjusted_x = {adjusted_x}")
+                            #print(f"Fallback: y = {y}, min_x = {adjusted_x}, adjusted_x = {adjusted_x}")
         if all_points and self.latest_pointcloud is not None:
             try:
                 matched_points = []
@@ -321,6 +303,10 @@ class ImageSaver(Node):
                         # (This depends on your coordinate frames)
                         matched_points.append((x, y, z))
 
+                if self.durak_var:
+                    #self.get_logger().info("DURAK VAR! Yayın yapılmayacak.")
+                    return
+
                 if matched_points:
                     # Create PointCloud2 message
                     header = self.latest_pointcloud_header
@@ -333,8 +319,9 @@ class ImageSaver(Node):
                     ]
 
                     pc2_msg = point_cloud2.create_cloud(header, fields, matched_points)
+
                     self.filtered_pointcloud_pub.publish(pc2_msg)
-                    self.get_logger().info(f"Published filtered PointCloud2 with {len(matched_points)} points")
+                    #self.get_logger().info(f"Published filtered PointCloud2 with {len(matched_points)} points")
 
             except Exception as e:
                 self.get_logger().error(f"Error creating filtered PointCloud: {str(e)}")
@@ -342,7 +329,7 @@ class ImageSaver(Node):
         # Eğer mid_points boşsa, fallback_points'i kullan
         if not mid_points and fallback_points:
             mid_points = fallback_points
-            print("Using fallback points")
+            #print("Using fallback points")
 
         # ROI alanını ana görselde belirginleştirme (dikdörtgen çizme)
         roi_top_left = (get_roi_x_bounds(roi_y_start)[0], roi_y_start)
@@ -362,8 +349,7 @@ class ImageSaver(Node):
                 cv2.circle(im0s, point, radius=5, color=(0, 0, 255), thickness=-1)
 
             # Tekerlek açısını hesapla ve gönder
-            steering_angle = self.calculate_steering_angle(mid_points)
-            self.publish_cmd_vel(steering_angle)
+            #steering_angle = self.calculate_steering_angle(mid_points)
         
 
             # Process detections
@@ -376,15 +362,15 @@ class ImageSaver(Node):
                     plot_one_box(xyxy, im0s, line_thickness=3)
             # Show result
             show_seg_result(im0s, (da_seg_mask, thinned_ll_mask_for_show), is_demo=True)
-            cv2.putText(im0s, f"Serit = {self.serit}", (10,30), cv2.FONT_HERSHEY_SIMPLEX,
-                        1, (0,255,0), 2, cv2.LINE_AA)
+
             if len(mid_points) >= 2:
                 for i in range(1, len(mid_points)):
                     cv2.line(im0s, mid_points[i - 1], mid_points[i], (0, 255, 0), thickness=2)
                 # Orta noktaları daire olarak çiz
                 for point in mid_points:
                     cv2.circle(im0s, point, radius=5, color=(0, 0, 255), thickness=-1)
-            cv2.imshow("hasan",im0s)
+            im0s_resized = cv2.resize(im0s, (0, 0), fx=0.5, fy=0.5)
+            cv2.imshow("Serit Tespiti", im0s_resized)
             #cv2.imshow("ROI", roi_im0s)
             cv2.waitKey(1)
         #print(f'Done. ({time.time() - t0:.3f}s)')
