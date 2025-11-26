@@ -719,9 +719,9 @@
       <child>camera_link</child>
     </joint>
 
-    <!--Lidar
+    <!--2D Lidar
     Sensör-->
-    <link name="lidar_link">
+    <link name="2Dlidar_link">
       <pose>1.35 -0.1  0.05 0 0 0</pose>
       <inertial>
         <mass>0.1</mass>
@@ -731,7 +731,7 @@
           <izz>0.0001</izz>
         </inertia>
       </inertial>
-      <visual name="lidar_visual">
+      <visual name="2Dlidar_visual">
         <pose>0 0 0 0 0 1.5707</pose>
         <geometry>
           <mesh>
@@ -739,7 +739,7 @@
           </mesh>
         </geometry>
       </visual>
-      <collision name="lidar_collision">
+      <collision name="'2Dlidar_collision">
         <geometry>
           <box>
             <size>0.1 0.1 0.1</size>
@@ -750,7 +750,7 @@
       <sensor name="gpu_lidar" type="gpu_lidar">
         <topic>scan</topic>
         <pose>0.0 0 0 0 0 0</pose>
-        <ignition_frame_id>lidar_link</ignition_frame_id>
+        <ignition_frame_id>2Dlidar_link</ignition_frame_id>
         <ray>
           <scan>
             <horizontal>
@@ -776,18 +776,18 @@
         <visualize>false</visualize>
       </sensor>
     </link>
-    <frame name="lidar_frame" attached_to='base_link'>
+    <frame name="2Dlidar_frame" attached_to='base_link'>
       <pose>0.0 0 0 0 0 0</pose>
     </frame>
 
-    <joint name="lidar_joint" type="fixed">
+    <joint name="2Dlidar_joint" type="fixed">
       <pose>0 0 0 0 0 0</pose>
       <parent>base_link</parent>
-      <child>lidar_link</child>
+      <child>2Dlidar_link</child>
     </joint>
 
-    <!-- 3D SENSÖR -->
-    <link name="lidar_link_3d">
+    <!-- 3D lidar SENSÖR -->
+    <link name="rslidar_link">
       <pose>-0.1 0.0 1 0 0 1.57</pose>
       <inertial>
         <mass>0.1</mass>
@@ -797,14 +797,14 @@
           <izz>0.0001</izz>
         </inertia>
       </inertial>
-      <visual name="lidar_visual_3d">
+      <visual name="rslidar_visual">
        <geometry>
           <mesh>
             <uri>model://Evata/meshes/lidar_3d_v1.dae</uri>
           </mesh>
         </geometry>
       </visual>
-      <collision name="lidar_collision_3d">
+      <collision name="rslidar_collision">
         <geometry>
           <box>
             <size>0.1 0.1 0.1</size>
@@ -813,9 +813,9 @@
       </collision>
 
 	<sensor name="helios_32_sim" type="gpu_lidar">
-	  <topic>helios</topic>
+	  <topic>rslidar</topic>
 	  <pose>0.0 0 0 0 0 0</pose>
-	  <ignition_frame_id>lidar_link_3d</ignition_frame_id>
+	  <ignition_frame_id>rslidar_link</ignition_frame_id>
 	  <ray>
 	    <scan>
 	      <horizontal>
@@ -847,14 +847,14 @@
 	  <visualize>false</visualize>
 	</sensor>
     </link>
-    <frame name="lidar_frame_3d" attached_to='base_link'>
+    <frame name="rslidar_frame" attached_to='base_link'>
       <pose>0.0 0 0 0 0 0</pose>
     </frame>
 
-    <joint name="lidar_joint_3d" type="fixed">
+    <joint name="rslidar_joint" type="fixed">
       <pose>0.0 0 0.0 0 0 0</pose>
       <parent>base_link</parent>
-      <child>lidar_link_3d</child>
+      <child>rslidar_link</child>
     </joint>
 
     <!-- ZED Camera -->
@@ -932,6 +932,8 @@
       <tf_topic>/odom/tf</tf_topic>
     </plugin>
     
+    
+     <!-- Simülasyon videosu için farklı açılardan kameralar -->
     <link name="top_view_camera_link">
    <pose>0 0 10 0 1.5708 0</pose> <!-- Link pozisyonu, joint ile konumlandırılacak -->
 
