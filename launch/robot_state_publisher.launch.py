@@ -16,7 +16,7 @@ def generate_launch_description():
     src_dir = dir_path.split('/install')[0]  # install kısmını çıkar
     
     # model dosyasının yolu
-    sdf_path = os.path.join(src_dir, "src","evata_sim",'pist_world', 'models', 'Evata', 'model.sdf')
+    sdf_path = os.path.join(src_dir, "src","evata_sim",'pist', 'models', 'Evata', 'model.sdf')
 
     # Xacro dosyasını oku ve işleme yap
     doc = xacro.parse(open(sdf_path))

@@ -16,7 +16,7 @@ def generate_launch_description():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     src_dir = dir_path.split('/install')[0]
 
-    world_file = os.path.join(src_dir, 'src', 'evata_sim', 'pist_world', 'pist.world')
+    world_file = os.path.join(src_dir, 'src', 'evata_sim', 'pist', 'pist.world')
 
     # GZ resource path
     gz_resource_path = SetEnvironmentVariable(
@@ -26,7 +26,7 @@ def generate_launch_description():
             ":" +
             os.path.join(src_dir, "src", "evata_sim", "navigasyon", "models") +
             ":" +
-            os.path.join(src_dir, "src", "evata_sim", "pist_world", "models")
+            os.path.join(src_dir, "src", "evata_sim", "pist", "models")
         )
     )
 
@@ -37,7 +37,7 @@ def generate_launch_description():
         output='screen',
         arguments=[
             '-entity', "Evata",
-            '-file', os.path.join(src_dir, "src", "evata_sim", "pist_world", "models", "Evata", "model.sdf"),
+            '-file', os.path.join(src_dir, "src", "evata_sim", "pist", "models", "Evata", "model.sdf"),
             '-allow_renaming', 'true',
             '-x', '32.6016',
             '-y', '43.6005',
@@ -97,7 +97,7 @@ def generate_launch_description():
         ),
 
         IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([launch_file_dir, '/navigation2.launch.py']),
+            PythonLaunchDescriptionSource([launch_file_dir, '/nav2_bringup.launch.py']),
             launch_arguments={'use_sim_time': use_sim_time}.items(),
         ),
     ])
