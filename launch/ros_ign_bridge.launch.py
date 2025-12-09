@@ -23,7 +23,7 @@ def generate_launch_description():
         '/joint_states@sensor_msgs/msg/JointState[ignition.msgs.Model',
         '/scan@sensor_msgs/msg/LaserScan@ignition.msgs.LaserScan',
         '/scan/points@sensor_msgs/msg/PointCloud2@ignition.msgs.PointCloudPacked',
-        '/imu@sensor_msgs/msg/Imu[ignition.msgs.IMU',
+	'/imu@sensor_msgs/msg/Imu@ignition.msgs.IMU',	
 		'/depth_camera/zed/image@sensor_msgs/msg/Image@ignition.msgs.Image',
 		'/depth_camera/zed/points@sensor_msgs/msg/PointCloud2@ignition.msgs.PointCloud',
 		'/depth_camera/zed/camera_info@sensor_msgs/msg/CameraInfo@ignition.msgs.CameraInfo',

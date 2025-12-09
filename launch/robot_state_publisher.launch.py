@@ -21,6 +21,7 @@ def generate_launch_description():
     # Xacro dosyasını oku ve işleme yap
     doc = xacro.parse(open(sdf_path))
     xacro.process_doc(doc)
+    
 
     return LaunchDescription([
         DeclareLaunchArgument(

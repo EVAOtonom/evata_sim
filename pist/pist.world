@@ -33,6 +33,7 @@
 			name="ignition::gazebo::systems::Sensors">
 			<render_engine>ogre2</render_engine>
 		</plugin>
+		
 
 		<!-- Light -->
 		<light type="directional" name="sun">

@@ -16,7 +16,7 @@ def generate_launch_description():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     src_dir = dir_path.split('/install')[0]
 
-    world_file = os.path.join(src_dir, 'src', 'evata_sim', 'pist', 'pist.world')
+    world_file = os.path.join(src_dir, 'src', 'evata_sim', 'pist', 'simulation_video.world')
 
     # GZ resource path
     gz_resource_path = SetEnvironmentVariable(
