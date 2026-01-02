@@ -898,6 +898,10 @@
       <robot_base_frame>base_footprint</robot_base_frame>
       <tf_topic>/odom/tf</tf_topic>
     </plugin>
+    
+    
+    
+<!-- imu link-->    
 
     <link name="imu_link">
   <inertial>
@@ -916,6 +920,45 @@
       <child>imu_link</child>
       <pose>0 0 0.1 0 0 0</pose>
     </joint>         
+    
+    
+    
+ <!-- GPS link ve sensör -->   
+    
+<link name="gps_link">
+  <pose>0 0 0 0 0 0</pose>
+
+  <sensor name="navsat" type="navsat">
+    <always_on>true</always_on>
+    <update_rate>1</update_rate>
+    <topic>/gps</topic>
+    <gz_frame_id>gps_link</gz_frame_id>
+
+    <navsat>
+      <position_sensing>
+        <horizontal>
+          <noise type="gaussian">
+            <mean>0.0</mean>
+            <stddev>0.0</stddev>
+          </noise>
+        </horizontal>
+        <vertical>
+          <noise type="gaussian">
+            <mean>0.0</mean>
+            <stddev>0.0</stddev>
+          </noise>
+        </vertical>
+      </position_sensing>
+    </navsat>
+  </sensor>
+</link>
+
+<joint name="gps_joint" type="fixed">
+  <parent>base_link</parent>
+  <child>gps_link</child>
+</joint>
+    
+    
     
      <!-- Simülasyon videosu için farklı açılardan kameralar -->
     <link name="top_view_camera_link">

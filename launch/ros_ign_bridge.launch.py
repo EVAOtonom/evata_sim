@@ -31,7 +31,8 @@ def generate_launch_description():
 		'/depth_camera/zed/image@sensor_msgs/msg/Image@ignition.msgs.Image',
 		'/depth_camera/zed/points@sensor_msgs/msg/PointCloud2@ignition.msgs.PointCloudPacked',
         '/rslidar@sensor_msgs/msg/LaserScan@ignition.msgs.LaserScan',
-        '/rslidar/points@sensor_msgs/msg/PointCloud2@ignition.msgs.PointCloudPacked'
+        '/rslidar/points@sensor_msgs/msg/PointCloud2@ignition.msgs.PointCloudPacked',
+        '/gps@sensor_msgs/msg/NavSatFix@gz.msgs.NavSat',
 
 
             
