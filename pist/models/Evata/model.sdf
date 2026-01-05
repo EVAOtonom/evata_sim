@@ -786,10 +786,11 @@
 	<sensor name="helios_32_sim" type="gpu_lidar">
 	  <topic>rslidar</topic>
 	  <pose>0.0 0 0 0 0 0</pose>
+	  <ignition_frame_id>2Dlidar_link</ignition_frame_id>	  
 	  <ray>
 	    <scan>
 	      <horizontal>
-		<samples>600</samples> <!-- 70 dereceyi temsil edecek kadar -->
+		<samples>1800</samples> <!-- 70 dereceyi temsil edecek kadar -->
 		<resolution>1</resolution>
                 <min_angle>-3.14159</min_angle>
                 <max_angle>3.14159</max_angle>
