@@ -20,3 +20,4 @@ Simülasyon ortamınız hazır. Şimdi aşağıdaki komutlar ile simülasyonu ba
 source install/setup.bash
 ros2 launch evata_sim pist_launch.py
 ```
+~Akif
