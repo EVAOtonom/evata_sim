@@ -18,6 +18,6 @@ sudo apt-get install ros-humble-ros-gz-bridge
 Simülasyon ortamınız hazır. Şimdi aşağıdaki komutlar ile simülasyonu başlatabilirsiniz.
 ```
 source install/setup.bash
-ros2 launch evata_sim pist_launch.py
+ros2 launch evata_sim navigasyon.launch.py 
 ```
 ~Akif
