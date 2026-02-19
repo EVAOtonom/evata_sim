@@ -40,7 +40,9 @@ setup(
             "sign_converted=" + package_name + ".sign_converted:main",
             "live_gps=" + package_name + ".live_gps:main",
             "new_control=" + package_name + ".new_control:main",
-            "information=" + package_name + ".information:main"
+            "information=" + package_name + ".information:main",
+            "pinar=" + package_name + ".pinar:main",
+           
         ],
     },
 )
