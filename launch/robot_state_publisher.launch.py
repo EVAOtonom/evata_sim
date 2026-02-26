@@ -36,5 +36,8 @@ def generate_launch_description():
             output='screen',
             parameters=[{'use_sim_time': use_sim_time,
                          'robot_description': doc.toxml()}]),
+                         
+                         
+                         
     ])
 

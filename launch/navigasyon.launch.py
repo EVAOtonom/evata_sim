@@ -15,6 +15,12 @@ def generate_launch_description():
     # Mevcut çalışma dizinini al
     dir_path = os.path.dirname(os.path.realpath(__file__))
     src_dir = dir_path.split('/install')[0]
+    
+
+    pkg_share = get_package_share_directory('evata_sim')
+
+    ekf_param_file = os.path.join(src_dir, "src", "evata_sim", "navigasyon", "params","ekf.yaml")
+  
 
     world_file = os.path.join(src_dir, 'src', 'evata_sim', 'pist', 'simulation_video.world')
 
@@ -55,6 +61,14 @@ def generate_launch_description():
         output='screen',
         arguments=['-file', world_file, '-allow_renaming', 'false'],
     )
+    
+    robot_localization_node = Node(
+        package='robot_localization',
+        executable='ekf_node',
+        name='ekf_node',
+        output='screen',
+        parameters=[ekf_param_file, {'use_sim_time': use_sim_time}]
+    )
 
     evata_sim_share_dir = get_package_share_directory('evata_sim')
     launch_file_dir = os.path.join(evata_sim_share_dir, 'launch')
@@ -63,6 +77,7 @@ def generate_launch_description():
         gz_resource_path,
         gz_spawn_entity,
         gz_spawn_world,
+        robot_localization_node,
 
         # Gazebo (Garden/Fortress)
         IncludeLaunchDescription(
