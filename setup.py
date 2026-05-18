@@ -15,11 +15,11 @@ setup(
         # Launch dosyalarını ve txt yollarını ekliyoruz
         (os.path.join('share', package_name, 'launch'), glob('launch/*.py')),
         (os.path.join('share', package_name, 'gps_data'), ['evata_sim/gps_map.txt']),
-        (os.path.join('share', package_name, 'model'), ['evata_sim/sol300best.pt']),
-        (os.path.join('share', package_name, 'model2'), ['evata_sim/best.pt']),    
-        (os.path.join('share', package_name, 'waypoint'), ['evata_sim/waypoint.txt']),
-        (os.path.join('share', package_name, 'json'), ['evata_sim/gps_targets.json']),
-        (os.path.join('share', package_name, 'model3'), ['evata_sim/train16best.pt']),
+        (os.path.join('share', package_name, 'waypoint'), ['evata_sim/waypoint.txt']),  
+        (os.path.join('share', package_name, 'json'), ['evata_sim/gps_targets.json']),   
+         # Tüm modeller tek yerde        
+        (os.path.join('share', package_name, 'model'), glob('evata_sim/model/*.pt')),
+
     ],
     install_requires=['setuptools'],
     zip_safe=False,
@@ -44,4 +44,3 @@ setup(
         ],
     },
 )
-
